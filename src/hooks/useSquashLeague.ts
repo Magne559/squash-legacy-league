@@ -8,6 +8,7 @@ import { generateDoubleRoundRobinSchedule, generateCupMatches, generateFinalMatc
 export const useSquashLeague = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [currentSeason, setCurrentSeason] = useState<Season | null>(null);
+  const [seasons, setSeasons] = useState<Season[]>([]);
   const [seasonArchive, setSeasonArchive] = useState<SeasonArchive[]>([]);
   const [retiredPlayers, setRetiredPlayers] = useState<Player[]>([]);
 
@@ -60,6 +61,7 @@ export const useSquashLeague = () => {
     });
     
     setCurrentSeason(newSeason);
+    setSeasons(prev => [...prev, newSeason]);
   };
 
   const simulateNextMatch = () => {
@@ -112,6 +114,11 @@ export const useSquashLeague = () => {
       currentMatchIndex: currentSeason.currentMatchIndex + 1,
       currentRound: nextRound
     });
+  };
+
+  // Add simulateCupMatch function (same as simulateNextMatch for now)
+  const simulateCupMatch = () => {
+    simulateNextMatch();
   };
 
   const endSeason = () => {
@@ -261,9 +268,11 @@ export const useSquashLeague = () => {
   return {
     players,
     currentSeason,
+    seasons,
     seasonArchive,
     retiredPlayers,
     simulateNextMatch,
+    simulateCupMatch,
     endSeason
   };
 };
