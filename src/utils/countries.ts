@@ -3,59 +3,70 @@ import { Country } from "@/types/squash";
 
 export const COUNTRIES: Country[] = [
   {
-    name: "Solvia",
-    flag: "🟢",
-    description: "Small European squash nation, very technical players"
-  },
-  {
-    name: "Jandora",
-    flag: "🟡",
-    description: "Desert kingdom with rich squash funding"
-  },
-  {
-    name: "Tarkeen Republic",
-    flag: "🔴",
-    description: "Former eastern bloc, gritty power-based style"
-  },
-  {
-    name: "Velkor",
-    flag: "⚫",
-    description: "Cold, mountainous island known for disciplined players"
-  },
-  {
-    name: "Lunvaria",
-    flag: "🟠",
-    description: "South American-inspired flair country"
-  },
-  {
-    name: "Noraka",
+    name: "Norvalla",
     flag: "🔵",
-    description: "East Asian precision-focused squash culture"
+    description: "Northern maritime nation known for technical precision",
+    flagSvg: "linear-gradient(to bottom, #1e3a8a 0%, #1e3a8a 50%, #e5e7eb 50%, #e5e7eb 100%)"
   },
   {
-    name: "Ravalon",
-    flag: "🟣",
-    description: "Tropical archipelago with few stars but unpredictable talent"
+    name: "Baltovia", 
+    flag: "🔴",
+    description: "Eastern European republic with powerful baseline players",
+    flagSvg: "linear-gradient(45deg, #dc2626 0%, #dc2626 100%)"
   },
   {
-    name: "Zhunai",
-    flag: "🟤",
-    description: "Central Asian dark-horse nation with 1-2 legends"
+    name: "Jamora",
+    flag: "🟢",
+    description: "Tropical island federation with agile, creative players",
+    flagSvg: "linear-gradient(to bottom, #16a34a 0%, #16a34a 100%)"
   },
   {
-    name: "Koryndor",
+    name: "Estora",
+    flag: "🟣", 
+    description: "Mountain kingdom producing disciplined, strategic players",
+    flagSvg: "linear-gradient(to bottom, #7c3aed 0%, #ffffff 33%, #7c3aed 66%, #7c3aed 100%)"
+  },
+  {
+    name: "Luxoria",
+    flag: "🟡",
+    description: "Wealthy city-state with well-funded training programs",
+    flagSvg: "linear-gradient(to bottom, #000000 0%, #fbbf24 20%, #fbbf24 80%, #000000 100%)"
+  },
+  {
+    name: "Kavalin",
+    flag: "🟠",
+    description: "Desert nation known for endurance and mental toughness",
+    flagSvg: "linear-gradient(to bottom, #0891b2 0%, #0891b2 100%)"
+  },
+  {
+    name: "Tursenia", 
     flag: "⚪",
-    description: "Tech-heavy metropolitan superstate"
+    description: "Island archipelago with unpredictable playing styles",
+    flagSvg: "linear-gradient(to right, #3b82f6 0%, #3b82f6 50%, #ffffff 50%, #ffffff 100%)"
   },
   {
-    name: "Quenada",
+    name: "Virelia",
+    flag: "🟤",
+    description: "Central plains confederation with gritty, determined players",
+    flagSvg: "linear-gradient(to bottom, #7f1d1d 0%, #7f1d1d 100%)"
+  },
+  {
+    name: "Udran",
+    flag: "⚫",
+    description: "Mountainous republic producing defensive specialists",
+    flagSvg: "linear-gradient(to bottom, #166534 0%, #e5e7eb 20%, #e5e7eb 80%, #dc2626 100%)"
+  },
+  {
+    name: "Mequaria",
     flag: "🟨",
-    description: "Cricket/squash hybrid culture"
+    description: "Southern peninsula known for explosive shot-making",
+    flagSvg: "linear-gradient(to bottom, #eab308 0%, #eab308 100%)"
   },
   {
-    name: "Ersan",
-    flag: "🟦",
-    description: "Baltic underdog with loyal fans and hard court dominance"
+    name: "Darnoth",
+    flag: "⚫",
+    description: "Northern tundra state with ice-cold mental composure",
+    flagSvg: "linear-gradient(to bottom, #374151 0%, #06b6d4 50%, #374151 100%)"
   }
 ];
 

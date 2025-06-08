@@ -4,7 +4,7 @@ export interface Player {
   name: string;
   age: number;
   rating: number;
-  developmentRate: number;
+  developmentRate: number; // 1-5 scale
   careerLength: number;
   seasonsPlayed: number;
   nationality: string;
@@ -17,6 +17,7 @@ export interface Player {
   setsWon: number;
   setsLost: number;
   pointsScored: number;
+  pointsConceded: number;
   championshipsWon: number;
   podiums: number;
   cupsWon: number;
@@ -26,21 +27,33 @@ export interface Player {
   // Season history
   seasonHistory: SeasonRecord[];
   
-  // Head to head
-  headToHead: Record<string, { wins: number; losses: number }>;
+  // Head to head - comprehensive tracking
+  headToHead: Record<string, HeadToHeadRecord>;
   
   // Status
   isRetired: boolean;
   isDeclined: boolean;
-  injuryMatches?: number;
+  peakAge: number; // Age when player peaks
+}
+
+export interface HeadToHeadRecord {
+  wins: number;
+  losses: number;
+  setsWon: number;
+  setsLost: number;
+  pointsScored: number;
+  pointsConceded: number;
+  opponentName: string;
+  opponentNationality: string;
 }
 
 export interface SeasonRecord {
   season: number;
   division: 1 | 2;
-  position: number;
-  cupResult?: 'Champion' | '2nd' | '3rd' | 'Semifinalist';
+  position: number; // 1-5 for Div 1, 6-10 for Div 2
+  cupResult?: 'Champion' | 'Runner-Up' | '3rd Place' | 'Semifinalist' | 'None';
   endRating: number;
+  leaguePoints: number;
 }
 
 export interface Match {
@@ -50,21 +63,39 @@ export interface Match {
   division: 1 | 2;
   matchType: 'league' | 'cup-semi' | 'cup-final' | 'cup-3rd';
   winner?: Player;
-  sets: number[];
+  sets: number[]; // Array showing who won each set (1 or 2)
+  setScores: Array<{player1: number, player2: number}>; // Detailed set scores
   completed: boolean;
   season: number;
+  round: number;
 }
 
 export interface Season {
   number: number;
   matches: Match[];
   currentMatchIndex: number;
+  currentRound: number;
+  maxRounds: number;
   cupParticipants: Player[];
   completed: boolean;
+  leaguePoints: Record<string, number>; // playerId -> points
 }
 
 export interface Country {
   name: string;
   flag: string;
   description: string;
+  flagSvg: string; // SVG for rectangular flag
+}
+
+export interface SeasonArchive {
+  season: number;
+  division1FinalStandings: Player[];
+  division2FinalStandings: Player[];
+  cupResults: {
+    winner?: Player;
+    runnerUp?: Player;
+    thirdPlace?: Player;
+    fourthPlace?: Player;
+  };
 }
