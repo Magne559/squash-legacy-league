@@ -27,7 +27,6 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
       
       if (aWins !== bWins) return bWins - aWins;
       
-      // Tiebreaker: head to head
       const headToHead = a.headToHead[b.id];
       if (headToHead) {
         return headToHead.wins - headToHead.losses;
@@ -43,15 +42,25 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
   return (
     <div className="p-4">
       <Tabs defaultValue="division1" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="division1">Division 1</TabsTrigger>
-          <TabsTrigger value="division2">Division 2</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-card/50 backdrop-blur-sm border-cyan-400/20">
+          <TabsTrigger 
+            value="division1" 
+            className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400"
+          >
+            Division 1
+          </TabsTrigger>
+          <TabsTrigger 
+            value="division2"
+            className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400"
+          >
+            Division 2
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="division1">
-          <Card>
+          <Card className="tech-card">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-cyan-400">
                 <span>Division 1 Standings</span>
                 <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
               </CardTitle>
@@ -66,12 +75,12 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       onClick={() => onPlayerClick(player)}
                     />
                     {index < 4 && (
-                      <div className="absolute -right-2 top-2 bg-green-500 text-white text-xs px-2 py-1 rounded">
+                      <div className="absolute -right-2 top-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs px-2 py-1 rounded border border-yellow-400 shadow-lg">
                         🏆 Cup
                       </div>
                     )}
                     {index === 4 && (
-                      <div className="absolute -right-2 top-2 bg-red-500 text-white text-xs px-2 py-1 rounded">
+                      <div className="absolute -right-2 top-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded border border-red-400 shadow-lg">
                         🔻 Rel
                       </div>
                     )}
@@ -83,9 +92,9 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
         </TabsContent>
         
         <TabsContent value="division2">
-          <Card>
+          <Card className="tech-card">
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
+              <CardTitle className="flex items-center justify-between text-cyan-400">
                 <span>Division 2 Standings</span>
                 <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
               </CardTitle>
@@ -100,7 +109,7 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       onClick={() => onPlayerClick(player)}
                     />
                     {index === 0 && (
-                      <div className="absolute -right-2 top-2 bg-blue-500 text-white text-xs px-2 py-1 rounded">
+                      <div className="absolute -right-2 top-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs px-2 py-1 rounded border border-blue-400 shadow-lg">
                         🔼 Pro
                       </div>
                     )}

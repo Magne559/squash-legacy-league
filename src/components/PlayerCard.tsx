@@ -16,42 +16,48 @@ export const PlayerCard = ({ player, position, showPosition = true, onClick }: P
 
   return (
     <Card 
-      className="p-4 mb-2 cursor-pointer hover:shadow-md transition-shadow"
+      className="tech-card p-4 mb-3 cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-4">
           {showPosition && (
-            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+            <div className="position-indicator">
               {position}
             </div>
           )}
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="text-lg">{country?.flag}</span>
-              <h3 className="font-semibold text-lg">{player.name}</h3>
+          <div className="flex-1">
+            <div className="flex items-center space-x-3 mb-2">
+              {country?.flag && (
+                <img 
+                  src={country.flag} 
+                  alt={`${player.nationality} flag`}
+                  className="tech-flag w-6 h-4"
+                />
+              )}
+              <h3 className="font-bold text-lg text-white">{player.name}</h3>
             </div>
             <div className="text-sm text-muted-foreground">
-              {player.nationality} • Age {player.age} • Rating {player.rating.toFixed(0)}
+              {player.nationality} • Age {player.age} • <span className="tech-stat">Rating {player.rating.toFixed(0)}</span>
             </div>
           </div>
         </div>
         <div className="text-right">
-          <div className="text-lg font-bold">{player.gamesWon}W-{player.gamesLost}L</div>
+          <div className="text-lg font-bold text-cyan-400">{player.gamesWon}W-{player.gamesLost}L</div>
           <div className="text-sm text-muted-foreground">{winPercentage}%</div>
         </div>
       </div>
       
       {player.isDeclined && (
-        <div className="mt-2 text-sm text-orange-600 flex items-center">
+        <div className="mt-3 text-sm text-orange-400 flex items-center bg-orange-500/10 px-3 py-1 rounded border border-orange-400/30">
           🔻 Career decline
         </div>
       )}
       
       {player.championshipsWon > 0 && (
-        <div className="mt-2 flex items-center space-x-2 text-sm">
-          <span>🏆 {player.championshipsWon} Championships</span>
-          {player.cupsWon > 0 && <span>🏅 {player.cupsWon} Cups</span>}
+        <div className="mt-3 flex items-center space-x-4 text-sm">
+          <span className="text-yellow-400">🏆 {player.championshipsWon} Championships</span>
+          {player.cupsWon > 0 && <span className="text-cyan-400">🏅 {player.cupsWon} Cups</span>}
         </div>
       )}
     </Card>

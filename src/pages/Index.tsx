@@ -30,18 +30,27 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="bg-primary text-primary-foreground p-4">
-        <h1 className="text-2xl font-bold text-center">Artificial Squash League</h1>
-        <p className="text-center text-sm opacity-90">
+      <div className="tech-header p-6">
+        <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          Artificial Squash League
+        </h1>
+        <p className="text-center text-sm text-muted-foreground mt-2">
           Season {currentSeason?.number || 1} • {players.length} Active Players
         </p>
+        <div className="mt-3 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>
       </div>
 
       <Tabs defaultValue="standings" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="standings">Standings</TabsTrigger>
-          <TabsTrigger value="matches">Matches</TabsTrigger>
-          <TabsTrigger value="hall-of-fame">Hall of Fame</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-3 bg-card/50 backdrop-blur-sm border-cyan-400/20">
+          <TabsTrigger value="standings" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+            Standings
+          </TabsTrigger>
+          <TabsTrigger value="matches" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+            Matches
+          </TabsTrigger>
+          <TabsTrigger value="hall-of-fame" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
+            Hall of Fame
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="standings" className="mt-0">
@@ -63,30 +72,32 @@ const Index = () => {
         
         <TabsContent value="hall-of-fame" className="mt-0">
           <div className="p-4">
-            <h2 className="text-xl font-bold mb-4">Hall of Fame</h2>
+            <h2 className="text-xl font-bold mb-4 text-cyan-400">Hall of Fame</h2>
             {retiredPlayers.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                No retired players yet. Keep playing to see legends emerge!
-              </p>
+              <div className="tech-card p-8 text-center">
+                <p className="text-muted-foreground">
+                  No retired players yet. Keep playing to see legends emerge!
+                </p>
+              </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {retiredPlayers
                   .sort((a, b) => b.championshipsWon - a.championshipsWon || b.careerHighRating - a.careerHighRating)
                   .map((player) => (
                     <div
                       key={player.id}
-                      className="p-4 bg-card border rounded-lg cursor-pointer hover:shadow-md transition-shadow"
+                      className="tech-card p-4 cursor-pointer"
                       onClick={() => setSelectedPlayer(player)}
                     >
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold">{player.name}</h3>
+                          <h3 className="font-semibold text-white">{player.name}</h3>
                           <p className="text-sm text-muted-foreground">
                             {player.nationality} • {player.seasonsPlayed} seasons
                           </p>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-bold">
+                          <div className="text-sm font-bold text-cyan-400">
                             🏆 {player.championshipsWon} • 🏅 {player.cupsWon}
                           </div>
                           <div className="text-sm text-muted-foreground">
