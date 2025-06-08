@@ -36,13 +36,6 @@
     --ring: 180 100% 50%; /* Cyan ring */
 
     --radius: 0.75rem; /* Slightly more rounded for modern look */
-
-    /* Custom tech variables */
-    --neon-cyan: 180 100% 50%;
-    --neon-magenta: 300 100% 50%;
-    --glass-bg: 210 50% 12%;
-    --glow-cyan: 0 0 20px hsl(180 100% 50% / 0.5);
-    --glow-magenta: 0 0 20px hsl(300 100% 50% / 0.5);
   }
 
   .dark {
@@ -82,32 +75,6 @@
     background: rgba(75, 83, 99, 0.1);
     backdrop-filter: blur(10px);
     border: 1px solid rgba(0, 255, 255, 0.2);
-    box-shadow: 0 8px 32px rgba(0, 255, 255, 0.1);
-  }
-
-  /* Neon glow effects */
-  .neon-glow-cyan {
-    box-shadow: var(--glow-cyan);
-    border-color: hsl(var(--neon-cyan));
-  }
-
-  .neon-glow-magenta {
-    box-shadow: var(--glow-magenta);
-    border-color: hsl(var(--neon-magenta));
-  }
-
-  /* Pulse animation for active elements */
-  .neon-pulse {
-    animation: neon-pulse 2s ease-in-out infinite alternate;
-  }
-
-  @keyframes neon-pulse {
-    from {
-      box-shadow: 0 0 5px hsl(180 100% 50% / 0.3);
-    }
-    to {
-      box-shadow: 0 0 20px hsl(180 100% 50% / 0.8), 0 0 30px hsl(180 100% 50% / 0.4);
-    }
   }
 
   /* Smooth transitions */
@@ -115,16 +82,14 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
-  /* Interactive glow on hover */
+  /* Interactive hover on hover */
   .interactive-glow:hover {
-    box-shadow: 0 0 20px hsl(180 100% 50% / 0.6);
     transform: translateY(-2px);
   }
 
   /* Tech-style progress bars */
   .tech-progress {
     background: linear-gradient(90deg, hsl(180 100% 50%) 0%, hsl(300 100% 50%) 100%);
-    box-shadow: 0 0 10px hsl(180 100% 50% / 0.5);
   }
 }
 
@@ -132,25 +97,21 @@
   /* Custom button variants */
   .btn-neon {
     @apply bg-gradient-to-r from-cyan-500 to-blue-500 text-white border border-cyan-400;
-    box-shadow: 0 0 20px hsl(180 100% 50% / 0.3);
     transition: all 0.3s ease;
   }
 
   .btn-neon:hover {
-    box-shadow: 0 0 30px hsl(180 100% 50% / 0.6);
     transform: translateY(-1px);
   }
 
   .btn-neon:active {
     transform: translateY(0);
-    box-shadow: 0 0 10px hsl(180 100% 50% / 0.4);
   }
 
   /* Header styles */
   .tech-header {
     background: linear-gradient(135deg, hsl(210 100% 8%) 0%, hsl(210 60% 12%) 100%);
     border-bottom: 1px solid hsl(180 100% 50% / 0.3);
-    box-shadow: 0 4px 20px hsl(180 100% 50% / 0.1);
   }
 
   /* Card enhancements */
@@ -166,25 +127,22 @@
     left: 0;
     right: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent, hsl(180 100% 50% / 0.5), transparent);
+    background: linear-gradient(90deg, transparent, hsl(180 100% 50% / 0.3), transparent);
   }
 
   /* Flag styling */
   .tech-flag {
     @apply rounded border border-cyan-400/30;
-    box-shadow: 0 0 5px hsl(180 100% 50% / 0.2);
   }
 
   /* Stats styling */
   .tech-stat {
     @apply text-cyan-400 font-bold;
-    text-shadow: 0 0 10px hsl(180 100% 50% / 0.5);
   }
 
   /* Position indicators */
   .position-indicator {
     @apply w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold;
     background: linear-gradient(135deg, hsl(180 100% 50%), hsl(300 100% 50%));
-    box-shadow: 0 0 15px hsl(180 100% 50% / 0.4);
   }
 }
