@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Player } from "@/types/squash";
 import { useSquashLeague } from "@/hooks/useSquashLeague";
@@ -6,6 +5,7 @@ import { StandingsView } from "@/components/StandingsView";
 import { MatchCenter } from "@/components/MatchCenter";
 import { PlayerProfile } from "@/components/PlayerProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
@@ -16,8 +16,15 @@ const Index = () => {
     retiredPlayers,
     simulateNextMatch,
     simulateCupMatch,
-    endSeason
+    endSeason,
+    resetLeague
   } = useSquashLeague();
+
+  const handleResetLeague = () => {
+    if (confirm('Are you sure you want to reset the entire league? This will delete all progress and cannot be undone.')) {
+      resetLeague();
+    }
+  };
 
   if (selectedPlayer) {
     return (
@@ -31,10 +38,20 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="tech-header p-6">
-        <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-          Artificial Squash League
-        </h1>
-        <p className="text-center text-sm text-muted-foreground mt-2">
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+            Artificial Squash League
+          </h1>
+          <Button
+            onClick={handleResetLeague}
+            variant="destructive"
+            size="sm"
+            className="text-xs"
+          >
+            Reset League
+          </Button>
+        </div>
+        <p className="text-center text-sm text-muted-foreground">
           Season {currentSeason?.number || 1} • {players.length} Active Players
         </p>
         <div className="mt-3 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>

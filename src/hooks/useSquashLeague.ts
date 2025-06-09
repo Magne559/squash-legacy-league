@@ -1,9 +1,18 @@
-
 import { useState, useEffect } from 'react';
 import { Player, Season, Match, SeasonArchive } from '@/types/squash';
 import { generateInitialPlayers, generatePlayer } from '@/utils/playerGenerator';
 import { simulateMatch, developPlayer } from '@/utils/matchSimulation';
 import { generateDoubleRoundRobinSchedule, generateCupMatches, generateFinalMatches, scheduleMatchesByRounds } from '@/utils/matchScheduler';
+
+interface GameState {
+  players: Player[];
+  currentSeason: Season | null;
+  seasons: Season[];
+  seasonArchive: SeasonArchive[];
+  retiredPlayers: Player[];
+}
+
+const SAVE_KEY = 'squashLeagueSave';
 
 export const useSquashLeague = () => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -12,14 +21,77 @@ export const useSquashLeague = () => {
   const [seasonArchive, setSeasonArchive] = useState<SeasonArchive[]>([]);
   const [retiredPlayers, setRetiredPlayers] = useState<Player[]>([]);
 
+  // Save game state to localStorage
+  const saveGameState = (state: Partial<GameState>) => {
+    try {
+      const currentState: GameState = {
+        players: state.players || players,
+        currentSeason: state.currentSeason !== undefined ? state.currentSeason : currentSeason,
+        seasons: state.seasons || seasons,
+        seasonArchive: state.seasonArchive || seasonArchive,
+        retiredPlayers: state.retiredPlayers || retiredPlayers
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(currentState));
+      console.log('Game state saved to localStorage');
+    } catch (error) {
+      console.error('Failed to save game state:', error);
+    }
+  };
+
+  // Load game state from localStorage
+  const loadGameState = (): GameState | null => {
+    try {
+      const savedState = localStorage.getItem(SAVE_KEY);
+      if (savedState) {
+        const parsedState = JSON.parse(savedState) as GameState;
+        console.log('Game state loaded from localStorage');
+        return parsedState;
+      }
+    } catch (error) {
+      console.error('Failed to load game state:', error);
+    }
+    return null;
+  };
+
+  // Reset the entire league
+  const resetLeague = () => {
+    try {
+      localStorage.removeItem(SAVE_KEY);
+      console.log('Game state cleared from localStorage');
+      
+      // Reset all state to initial values
+      const initialPlayers = generateInitialPlayers();
+      setPlayers(initialPlayers);
+      setSeasons([]);
+      setSeasonArchive([]);
+      setRetiredPlayers([]);
+      
+      // Start fresh season
+      startNewSeason(initialPlayers, 1);
+    } catch (error) {
+      console.error('Failed to reset league:', error);
+    }
+  };
+
   useEffect(() => {
-    // Initialize league
-    const initialPlayers = generateInitialPlayers();
-    setPlayers(initialPlayers);
-    startNewSeason(initialPlayers, 1);
+    // Try to load saved game state on app start
+    const savedState = loadGameState();
+    if (savedState) {
+      setPlayers(savedState.players);
+      setCurrentSeason(savedState.currentSeason);
+      setSeasons(savedState.seasons);
+      setSeasonArchive(savedState.seasonArchive);
+      setRetiredPlayers(savedState.retiredPlayers);
+    } else {
+      // Initialize new league if no save exists
+      const initialPlayers = generateInitialPlayers();
+      setPlayers(initialPlayers);
+      startNewSeason(initialPlayers, 1);
+    }
   }, []);
 
   const startNewSeason = (currentPlayers: Player[], seasonNumber: number) => {
+    // Initialize league
     const div1Players = currentPlayers.filter(p => p.division === 1);
     const div2Players = currentPlayers.filter(p => p.division === 2);
     
@@ -61,7 +133,16 @@ export const useSquashLeague = () => {
     });
     
     setCurrentSeason(newSeason);
-    setSeasons(prev => [...prev, newSeason]);
+    setSeasons(prev => {
+      const newSeasons = [...prev, newSeason];
+      // Save state after season creation
+      saveGameState({ 
+        players: currentPlayers, 
+        currentSeason: newSeason, 
+        seasons: newSeasons 
+      });
+      return newSeasons;
+    });
   };
 
   const simulateNextMatch = () => {
@@ -108,12 +189,17 @@ export const useSquashLeague = () => {
     
     const nextRound = result.round > currentSeason.currentRound ? result.round : currentSeason.currentRound;
     
-    setCurrentSeason({
+    const updatedSeason = {
       ...currentSeason,
       matches: updatedMatches,
       currentMatchIndex: currentSeason.currentMatchIndex + 1,
       currentRound: nextRound
-    });
+    };
+    
+    setCurrentSeason(updatedSeason);
+    
+    // Save state after match simulation
+    saveGameState({ currentSeason: updatedSeason });
   };
 
   // Add simulateCupMatch function (same as simulateNextMatch for now)
@@ -236,13 +322,15 @@ export const useSquashLeague = () => {
       cupResults
     };
     
-    setSeasonArchive(prev => [...prev, archive]);
+    const newSeasonArchive = [...seasonArchive, archive];
+    setSeasonArchive(newSeasonArchive);
     
     // Handle retirements and new players
     const activeUpdatedPlayers = updatedPlayers.filter(p => !p.isRetired);
     const newRetired = updatedPlayers.filter(p => p.isRetired && !retiredPlayers.some(rp => rp.id === p.id));
     
-    setRetiredPlayers(prev => [...prev, ...newRetired]);
+    const updatedRetiredPlayers = [...retiredPlayers, ...newRetired];
+    setRetiredPlayers(updatedRetiredPlayers);
     
     // Generate new players for retirees
     const newPlayers: Player[] = [];
@@ -254,9 +342,18 @@ export const useSquashLeague = () => {
     setPlayers(finalPlayers);
     
     // Mark season as completed
-    setCurrentSeason({
+    const completedSeason = {
       ...currentSeason,
       completed: true
+    };
+    setCurrentSeason(completedSeason);
+    
+    // Save state after season end
+    saveGameState({
+      players: finalPlayers,
+      currentSeason: completedSeason,
+      seasonArchive: newSeasonArchive,
+      retiredPlayers: updatedRetiredPlayers
     });
     
     // Start new season
@@ -273,6 +370,7 @@ export const useSquashLeague = () => {
     retiredPlayers,
     simulateNextMatch,
     simulateCupMatch,
-    endSeason
+    endSeason,
+    resetLeague
   };
 };
