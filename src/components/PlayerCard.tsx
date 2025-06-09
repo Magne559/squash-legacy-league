@@ -1,5 +1,5 @@
 
-import { Player } from "@/types/squash";
+import { Player, Season } from "@/types/squash";
 import { Card } from "@/components/ui/card";
 import { COUNTRIES } from "@/utils/countries";
 
@@ -9,6 +9,7 @@ interface PlayerCardProps {
   showPosition?: boolean;
   showCareerStats?: boolean;
   onClick?: () => void;
+  currentSeason?: Season | null;
 }
 
 export const PlayerCard = ({ 
@@ -16,10 +17,67 @@ export const PlayerCard = ({
   position, 
   showPosition = true, 
   showCareerStats = false,
-  onClick 
+  onClick,
+  currentSeason
 }: PlayerCardProps) => {
   const country = COUNTRIES.find(c => c.name === player.nationality);
-  const winPercentage = player.gamesPlayed > 0 ? (player.gamesWon / player.gamesPlayed * 100).toFixed(1) : '0.0';
+  
+  // Calculate season league stats if currentSeason is provided and showCareerStats is false
+  const getSeasonLeagueStats = () => {
+    if (!currentSeason || showCareerStats) {
+      return {
+        wins: player.gamesWon,
+        losses: player.gamesLost,
+        setsWon: player.setsWon,
+        setsLost: player.setsLost,
+        winPercentage: player.gamesPlayed > 0 ? (player.gamesWon / player.gamesPlayed * 100).toFixed(1) : '0.0'
+      };
+    }
+    
+    // Count only league matches from current season
+    const seasonLeagueMatches = currentSeason.matches.filter(m => 
+      m.matchType === 'league' && 
+      m.completed && 
+      (m.player1.id === player.id || m.player2.id === player.id)
+    );
+    
+    let seasonWins = 0;
+    let seasonLosses = 0;
+    let seasonSetsWon = 0;
+    let seasonSetsLost = 0;
+    
+    seasonLeagueMatches.forEach(match => {
+      if (match.winner?.id === player.id) {
+        seasonWins++;
+      } else {
+        seasonLosses++;
+      }
+      
+      // Calculate sets for this player in this match
+      const playerSets = match.sets.filter((setWinner, index) => {
+        if (setWinner === 1 && match.player1.id === player.id) return true;
+        if (setWinner === 2 && match.player2.id === player.id) return true;
+        return false;
+      }).length;
+      
+      const opponentSets = match.sets.length - playerSets;
+      seasonSetsWon += playerSets;
+      seasonSetsLost += opponentSets;
+    });
+    
+    const seasonGamesPlayed = seasonWins + seasonLosses;
+    const winPercentage = seasonGamesPlayed > 0 ? (seasonWins / seasonGamesPlayed * 100).toFixed(1) : '0.0';
+    
+    return {
+      wins: seasonWins,
+      losses: seasonLosses,
+      setsWon: seasonSetsWon,
+      setsLost: seasonSetsLost,
+      winPercentage
+    };
+  };
+  
+  const stats = getSeasonLeagueStats();
 
   return (
     <Card 
@@ -51,11 +109,11 @@ export const PlayerCard = ({
         </div>
         
         <div className="text-right flex-shrink-0">
-          <div className="text-lg font-bold text-cyan-400">{player.gamesWon}W-{player.gamesLost}L</div>
-          <div className="text-sm text-muted-foreground">{winPercentage}%</div>
+          <div className="text-lg font-bold text-cyan-400">{stats.wins}W-{stats.losses}L</div>
+          <div className="text-sm text-muted-foreground">{stats.winPercentage}%</div>
           {showCareerStats && (
             <div className="text-xs text-muted-foreground mt-1">
-              Sets: {player.setsWon}-{player.setsLost}
+              Sets: {stats.setsWon}-{stats.setsLost}
             </div>
           )}
         </div>

@@ -4,6 +4,7 @@ import { PlayerCard } from "./PlayerCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Info } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface StandingsViewProps {
   players: Player[];
@@ -70,7 +71,16 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
               <CardTitle className="flex items-center justify-between text-cyan-400">
                 <span>Division 1 Standings</span>
                 <div className="flex items-center space-x-2">
-                  <Info className="w-4 h-4 text-muted-foreground" title="Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
                 </div>
               </CardTitle>
@@ -83,7 +93,8 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       player={player} 
                       position={index + 1}
                       onClick={() => onPlayerClick(player)}
-                      showCareerStats={true}
+                      showCareerStats={false}
+                      currentSeason={currentSeason}
                     />
                     {index < 4 && (
                       <div className="absolute -right-2 top-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs px-2 py-1 rounded border border-yellow-400 shadow-lg">
@@ -108,7 +119,16 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
               <CardTitle className="flex items-center justify-between text-cyan-400">
                 <span>Division 2 Standings</span>
                 <div className="flex items-center space-x-2">
-                  <Info className="w-4 h-4 text-muted-foreground" title="Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head" />
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <Info className="w-4 h-4 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                   <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
                 </div>
               </CardTitle>
@@ -121,7 +141,8 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       player={player} 
                       position={index + 6}
                       onClick={() => onPlayerClick(player)}
-                      showCareerStats={true}
+                      showCareerStats={false}
+                      currentSeason={currentSeason}
                     />
                     {index === 0 && (
                       <div className="absolute -right-2 top-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs px-2 py-1 rounded border border-blue-400 shadow-lg">

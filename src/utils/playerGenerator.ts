@@ -47,7 +47,7 @@ export const generatePlayer = (division: 1 | 2 = 2): Player => {
     championshipsWon: 0,
     podiums: 0,
     cupsWon: 0,
-    cupPodiums: 0,
+    cupsPlayed: 0,
     careerHighRating: rating,
     
     seasonHistory: [],
