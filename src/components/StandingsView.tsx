@@ -3,6 +3,7 @@ import { Player, Season } from "@/types/squash";
 import { PlayerCard } from "./PlayerCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Info } from "lucide-react";
 
 interface StandingsViewProps {
   players: Player[];
@@ -18,20 +19,26 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
     return divisionPlayers.sort((a, b) => {
       if (!currentSeason) return 0;
       
-      const aWins = currentSeason.matches.filter(m => 
-        m.completed && m.winner?.id === a.id && m.division === division && m.matchType === 'league'
-      ).length;
-      const bWins = currentSeason.matches.filter(m => 
-        m.completed && m.winner?.id === b.id && m.division === division && m.matchType === 'league'
-      ).length;
+      // Primary: League points (wins)
+      const aPoints = currentSeason.leaguePoints[a.id] || 0;
+      const bPoints = currentSeason.leaguePoints[b.id] || 0;
+      if (aPoints !== bPoints) return bPoints - aPoints;
       
-      if (aWins !== bWins) return bWins - aWins;
+      // Tie-breaker 1: Set difference
+      const aSetDiff = a.setsWon - a.setsLost;
+      const bSetDiff = b.setsWon - b.setsLost;
+      if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
       
+      // Tie-breaker 2: Total points scored
+      if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
+      
+      // Tie-breaker 3: Head to head
       const headToHead = a.headToHead[b.id];
       if (headToHead) {
         return headToHead.wins - headToHead.losses;
       }
       
+      // Final: Rating
       return b.rating - a.rating;
     });
   };
@@ -62,7 +69,10 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-cyan-400">
                 <span>Division 1 Standings</span>
-                <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
+                <div className="flex items-center space-x-2">
+                  <Info className="w-4 h-4 text-muted-foreground" title="Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head" />
+                  <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -73,6 +83,7 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       player={player} 
                       position={index + 1}
                       onClick={() => onPlayerClick(player)}
+                      showCareerStats={true}
                     />
                     {index < 4 && (
                       <div className="absolute -right-2 top-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs px-2 py-1 rounded border border-yellow-400 shadow-lg">
@@ -96,7 +107,10 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
             <CardHeader>
               <CardTitle className="flex items-center justify-between text-cyan-400">
                 <span>Division 2 Standings</span>
-                <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
+                <div className="flex items-center space-x-2">
+                  <Info className="w-4 h-4 text-muted-foreground" title="Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head" />
+                  <span className="text-sm text-muted-foreground">Season {currentSeason?.number}</span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -107,6 +121,7 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       player={player} 
                       position={index + 6}
                       onClick={() => onPlayerClick(player)}
+                      showCareerStats={true}
                     />
                     {index === 0 && (
                       <div className="absolute -right-2 top-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs px-2 py-1 rounded border border-blue-400 shadow-lg">

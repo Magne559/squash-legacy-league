@@ -27,6 +27,7 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
   const completedCup = cupMatches.filter(m => m.completed).length;
   const totalCup = cupMatches.length;
 
+  const leaguePhaseComplete = completedLeague === totalLeague;
   const nextMatch = currentSeason.matches.find(m => !m.completed);
   const recentMatches = currentSeason.matches.filter(m => m.completed).slice(-5).reverse();
 
@@ -36,17 +37,25 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
     <div className="p-4 space-y-4">
       <Card className="tech-card border-cyan-400/30">
         <CardHeader>
-          <CardTitle className="text-cyan-400">Season {currentSeason.number} - Match Center</CardTitle>
+          <CardTitle className="text-cyan-400">
+            Season {currentSeason.number} - {leaguePhaseComplete ? 'Cup Phase' : 'League Phase'}
+          </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="text-center">
               <div className="text-2xl font-bold text-cyan-400">{completedLeague}/{totalLeague}</div>
               <div className="text-sm text-muted-foreground">League Matches</div>
+              {leaguePhaseComplete && (
+                <div className="text-xs text-green-400 mt-1">✓ Complete</div>
+              )}
             </div>
             <div className="text-center">
               <div className="text-2xl font-bold text-cyan-400">{completedCup}/{totalCup || 0}</div>
               <div className="text-sm text-muted-foreground">Cup Matches</div>
+              {!leaguePhaseComplete && (
+                <div className="text-xs text-muted-foreground mt-1">Awaiting league</div>
+              )}
             </div>
           </div>
 
@@ -55,17 +64,25 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
               <CardContent className="p-4">
                 <div className="text-center mb-3">
                   <div className="text-sm text-muted-foreground mb-2">
-                    {nextMatch.matchType === 'league' ? `Division ${nextMatch.division}` : 'Cup Tournament'}
+                    {nextMatch.matchType === 'league' ? (
+                      `Division ${nextMatch.division} League`
+                    ) : nextMatch.matchType === 'cup-semi' ? (
+                      'Cup Semifinal'
+                    ) : nextMatch.matchType === 'cup-3rd' ? (
+                      'Cup 3rd Place Final'
+                    ) : nextMatch.matchType === 'cup-final' ? (
+                      'Cup Final'
+                    ) : 'Cup Tournament'}
                   </div>
                   <div className="flex items-center justify-center space-x-4">
-                    <div className="text-center">
-                      <div className="text-lg mb-1">{getPlayerFlag(nextMatch.player1.name, nextMatch.player1.nationality)}</div>
+                    <div className="text-center flex-1">
+                      <div className="text-2xl mb-2">{getPlayerFlag(nextMatch.player1.name, nextMatch.player1.nationality)}</div>
                       <div className="font-semibold text-white text-base">{nextMatch.player1.name}</div>
                       <div className="text-sm text-cyan-400">Rating: {nextMatch.player1.rating.toFixed(0)}</div>
                     </div>
-                    <div className="text-2xl font-bold text-cyan-400">VS</div>
-                    <div className="text-center">
-                      <div className="text-lg mb-1">{getPlayerFlag(nextMatch.player2.name, nextMatch.player2.nationality)}</div>
+                    <div className="text-2xl font-bold text-cyan-400 px-4">VS</div>
+                    <div className="text-center flex-1">
+                      <div className="text-2xl mb-2">{getPlayerFlag(nextMatch.player2.name, nextMatch.player2.nationality)}</div>
                       <div className="font-semibold text-white text-base">{nextMatch.player2.name}</div>
                       <div className="text-sm text-cyan-400">Rating: {nextMatch.player2.rating.toFixed(0)}</div>
                     </div>
@@ -75,7 +92,7 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
                   onClick={nextMatch.matchType.includes('cup') ? onSimulateCup : onSimulateMatch}
                   className="w-full"
                 >
-                  Simulate Match
+                  Simulate {nextMatch.matchType.includes('cup') ? 'Cup Match' : 'Match'}
                 </Button>
               </CardContent>
             </Card>
@@ -96,7 +113,7 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
                 <div className="space-y-2">
                   {recentMatches.map((match) => (
                     <div key={match.id} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
-                      <div className="flex items-center space-x-3 text-sm">
+                      <div className="flex items-center space-x-3 text-sm flex-1">
                         <span className="text-lg">{getPlayerFlag(match.player1.name, match.player1.nationality)}</span>
                         <span className={`${match.winner?.id === match.player1.id ? 'font-bold text-white' : 'text-muted-foreground'}`}>
                           {match.player1.name}
@@ -106,6 +123,13 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
                         <span className={`${match.winner?.id === match.player2.id ? 'font-bold text-white' : 'text-muted-foreground'}`}>
                           {match.player2.name}
                         </span>
+                        {match.matchType !== 'league' && (
+                          <span className="text-xs text-cyan-400 ml-2">
+                            {match.matchType === 'cup-semi' ? 'SF' : 
+                             match.matchType === 'cup-final' ? 'F' : 
+                             match.matchType === 'cup-3rd' ? '3rd' : 'Cup'}
+                          </span>
+                        )}
                       </div>
                       <div className="text-sm font-mono text-cyan-400">
                         {match.sets.filter(s => s === 1).length}-{match.sets.filter(s => s === 2).length}

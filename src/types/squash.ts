@@ -21,7 +21,7 @@ export interface Player {
   championshipsWon: number;
   podiums: number;
   cupsWon: number;
-  cupPodiums: number;
+  cupsPlayed: number; // Changed from cupPodiums to cupsPlayed
   careerHighRating: number;
   
   // Season history
@@ -51,7 +51,7 @@ export interface SeasonRecord {
   season: number;
   division: 1 | 2;
   position: number; // 1-5 for Div 1, 6-10 for Div 2
-  cupResult?: 'Champion' | 'Runner-Up' | '3rd Place' | 'Semifinalist' | 'None';
+  cupResult?: 'Champion' | 'Runner-Up' | '3rd Place' | 'Semifinalist' | 'Did Not Qualify';
   endRating: number;
   leaguePoints: number;
 }
@@ -79,6 +79,7 @@ export interface Season {
   cupParticipants: Player[];
   completed: boolean;
   leaguePoints: Record<string, number>; // playerId -> points
+  leaguePhaseComplete?: boolean; // Track when league phase is done
 }
 
 export interface Country {

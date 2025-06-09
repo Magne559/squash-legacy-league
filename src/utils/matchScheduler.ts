@@ -81,20 +81,7 @@ export const generateCupMatches = (topFour: Player[], season: number): Match[] =
 
 export const generateFinalMatches = (semiWinners: Player[], semiLosers: Player[], season: number): Match[] => {
   return [
-    // Final
-    {
-      id: crypto.randomUUID(),
-      player1: semiWinners[0],
-      player2: semiWinners[1],
-      division: 1,
-      matchType: 'cup-final',
-      completed: false,
-      sets: [],
-      setScores: [],
-      season,
-      round: 2
-    },
-    // 3rd place match
+    // 3rd place match first
     {
       id: crypto.randomUUID(),
       player1: semiLosers[0],
@@ -106,6 +93,19 @@ export const generateFinalMatches = (semiWinners: Player[], semiLosers: Player[]
       setScores: [],
       season,
       round: 2
+    },
+    // Final last
+    {
+      id: crypto.randomUUID(),
+      player1: semiWinners[0],
+      player2: semiWinners[1],
+      division: 1,
+      matchType: 'cup-final',
+      completed: false,
+      sets: [],
+      setScores: [],
+      season,
+      round: 3
     }
   ];
 };
@@ -118,7 +118,7 @@ export const scheduleMatchesByRounds = (
   const allMatches: Match[] = [];
   const maxLeagueMatches = Math.max(div1Matches.length, div2Matches.length);
   
-  // Distribute league matches across rounds
+  // Distribute league matches across rounds - NO CUP MATCHES DURING LEAGUE
   const matchesPerRound = 2; // 2 matches per division per round
   const totalRounds = Math.ceil(maxLeagueMatches / matchesPerRound);
   
@@ -139,13 +139,20 @@ export const scheduleMatchesByRounds = (
       allMatches.push(div1Matches[div1Index]);
       div1Index++;
     }
-    
-    // Add cup matches for early rounds
-    if (round <= 2) {
-      const cupMatchesForRound = cupMatches.filter(m => m.round === round);
-      allMatches.push(...cupMatchesForRound);
-    }
   }
+  
+  // Add cup matches AFTER all league matches with proper round numbers
+  const cupStartRound = totalRounds + 1;
+  cupMatches.forEach(match => {
+    if (match.matchType === 'cup-semi') {
+      match.round = cupStartRound;
+    } else if (match.matchType === 'cup-3rd') {
+      match.round = cupStartRound + 1;
+    } else if (match.matchType === 'cup-final') {
+      match.round = cupStartRound + 2;
+    }
+    allMatches.push(match);
+  });
   
   return allMatches;
 };

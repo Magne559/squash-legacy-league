@@ -99,19 +99,36 @@ export const useSquashLeague = () => {
     const div1Matches = generateDoubleRoundRobinSchedule(div1Players, 1, seasonNumber);
     const div2Matches = generateDoubleRoundRobinSchedule(div2Players, 2, seasonNumber);
     
-    // Generate cup matches (top 4 from previous season's Div 1)
+    // Generate cup matches (top 4 from current Div 1) - to be played AFTER league
     let cupMatches: Match[] = [];
+    let cupParticipants: Player[] = [];
+    
     if (seasonNumber > 1 && seasonArchive.length > 0) {
       const lastSeason = seasonArchive[seasonArchive.length - 1];
       const topFour = lastSeason.division1FinalStandings.slice(0, 4);
       cupMatches = generateCupMatches(topFour, seasonNumber);
+      cupParticipants = topFour;
+      
+      // Mark cup participants as having played in cup
+      topFour.forEach(player => {
+        const currentPlayer = currentPlayers.find(p => p.id === player.id);
+        if (currentPlayer && !currentPlayer.isRetired) {
+          currentPlayer.cupsPlayed++;
+        }
+      });
     } else if (seasonNumber === 1) {
       // For first season, use current top 4 by rating
       const topFour = div1Players.sort((a, b) => b.rating - a.rating).slice(0, 4);
       cupMatches = generateCupMatches(topFour, seasonNumber);
+      cupParticipants = topFour;
+      
+      // Mark cup participants
+      topFour.forEach(player => {
+        player.cupsPlayed++;
+      });
     }
     
-    // Schedule all matches by rounds
+    // Schedule all matches with league first, then cup
     const allMatches = scheduleMatchesByRounds(div1Matches, div2Matches, cupMatches);
     
     const newSeason: Season = {
@@ -120,11 +137,10 @@ export const useSquashLeague = () => {
       currentMatchIndex: 0,
       currentRound: 1,
       maxRounds: Math.max(...allMatches.map(m => m.round)),
-      cupParticipants: cupMatches.length > 0 ? [
-        ...new Set(cupMatches.map(m => [m.player1, m.player2]).flat())
-      ] : [],
+      cupParticipants,
       completed: false,
-      leaguePoints: {}
+      leaguePoints: {},
+      leaguePhaseComplete: false
     };
     
     // Initialize league points
@@ -187,13 +203,18 @@ export const useSquashLeague = () => {
       }
     }
     
+    // Check if league phase is complete
+    const leagueMatches = updatedMatches.filter(m => m.matchType === 'league');
+    const leaguePhaseComplete = leagueMatches.every(m => m.completed);
+    
     const nextRound = result.round > currentSeason.currentRound ? result.round : currentSeason.currentRound;
     
     const updatedSeason = {
       ...currentSeason,
       matches: updatedMatches,
       currentMatchIndex: currentSeason.currentMatchIndex + 1,
-      currentRound: nextRound
+      currentRound: nextRound,
+      leaguePhaseComplete
     };
     
     setCurrentSeason(updatedSeason);
@@ -219,7 +240,15 @@ export const useSquashLeague = () => {
       const bPoints = currentSeason.leaguePoints[b.id] || 0;
       if (aPoints !== bPoints) return bPoints - aPoints;
       
-      // Tiebreaker: head to head
+      // Tie-breaker 1: Set difference
+      const aSetDiff = a.setsWon - a.setsLost;
+      const bSetDiff = b.setsWon - b.setsLost;
+      if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
+      
+      // Tie-breaker 2: Total points scored
+      if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
+      
+      // Tie-breaker 3: Head to head
       const headToHead = a.headToHead[b.id];
       if (headToHead) {
         return headToHead.wins - headToHead.losses;
@@ -232,6 +261,14 @@ export const useSquashLeague = () => {
       const aPoints = currentSeason.leaguePoints[a.id] || 0;
       const bPoints = currentSeason.leaguePoints[b.id] || 0;
       if (aPoints !== bPoints) return bPoints - aPoints;
+      
+      // Apply same tie-breakers
+      const aSetDiff = a.setsWon - a.setsLost;
+      const bSetDiff = b.setsWon - b.setsLost;
+      if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
+      
+      if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
+      
       return b.rating - a.rating;
     });
     
@@ -257,23 +294,23 @@ export const useSquashLeague = () => {
         : div2Standings.indexOf(player) + 6; // Div 2 positions are 6-10
       
       // Determine cup result
-      let cupResult: 'Champion' | 'Runner-Up' | '3rd Place' | 'Semifinalist' | 'None' = 'None';
-      const cupFinal = currentSeason.matches.find(m => m.matchType === 'cup-final' && m.completed);
-      const cup3rd = currentSeason.matches.find(m => m.matchType === 'cup-3rd' && m.completed);
-      const cupSemis = currentSeason.matches.filter(m => m.matchType === 'cup-semi' && m.completed);
+      let cupResult: 'Champion' | 'Runner-Up' | '3rd Place' | 'Semifinalist' | 'Did Not Qualify' = 'Did Not Qualify';
       
-      if (cupFinal?.winner?.id === player.id) {
-        cupResult = 'Champion';
-        player.cupsWon++;
-        player.cupPodiums++;
-      } else if (cupFinal && (cupFinal.player1.id === player.id || cupFinal.player2.id === player.id)) {
-        cupResult = 'Runner-Up';
-        player.cupPodiums++;
-      } else if (cup3rd?.winner?.id === player.id) {
-        cupResult = '3rd Place';
-        player.cupPodiums++;
-      } else if (cupSemis.some(m => m.player1.id === player.id || m.player2.id === player.id)) {
-        cupResult = 'Semifinalist';
+      if (currentSeason.cupParticipants.some(p => p.id === player.id)) {
+        const cupFinal = currentSeason.matches.find(m => m.matchType === 'cup-final' && m.completed);
+        const cup3rd = currentSeason.matches.find(m => m.matchType === 'cup-3rd' && m.completed);
+        const cupSemis = currentSeason.matches.filter(m => m.matchType === 'cup-semi' && m.completed);
+        
+        if (cupFinal?.winner?.id === player.id) {
+          cupResult = 'Champion';
+          player.cupsWon++;
+        } else if (cupFinal && (cupFinal.player1.id === player.id || cupFinal.player2.id === player.id)) {
+          cupResult = 'Runner-Up';
+        } else if (cup3rd?.winner?.id === player.id) {
+          cupResult = '3rd Place';
+        } else if (cupSemis.some(m => m.player1.id === player.id || m.player2.id === player.id)) {
+          cupResult = 'Semifinalist';
+        }
       }
       
       player.seasonHistory.push({
