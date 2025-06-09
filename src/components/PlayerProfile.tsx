@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Player, Match } from "@/types/squash";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +9,10 @@ import { COUNTRIES } from "@/utils/countries";
 interface PlayerProfileProps {
   player: Player;
   onBack: () => void;
+  recentMatches?: Match[];
 }
 
-export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
+export const PlayerProfile = ({ player, onBack, recentMatches = [] }: PlayerProfileProps) => {
   const [activeTab, setActiveTab] = useState("career");
   const country = COUNTRIES.find(c => c.name === player.nationality);
 
@@ -36,7 +36,9 @@ export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
         opponent: match.player1.id === playerPerspective.id ? match.player2 : match.player1,
         result: "Result pending",
         isWin: false,
-        score: ""
+        score: "",
+        winnerName: "",
+        loserName: ""
       };
     }
 
@@ -47,34 +49,30 @@ export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
     const player1Sets = match.sets.filter(set => set === 1).length;
     const player2Sets = match.sets.filter(set => set === 2).length;
     
-    // Format score as winner-loser
-    let scoreDisplay = "";
-    if (isWin) {
-      // Player won, so show player's sets first
-      if (match.player1.id === playerPerspective.id) {
-        scoreDisplay = `${player1Sets}–${player2Sets}`;
-      } else {
-        scoreDisplay = `${player2Sets}–${player1Sets}`;
-      }
-    } else {
-      // Player lost, so show opponent's sets first
-      if (match.player1.id === playerPerspective.id) {
-        scoreDisplay = `${player2Sets}–${player1Sets}`;
-      } else {
-        scoreDisplay = `${player1Sets}–${player2Sets}`;
-      }
-    }
+    // Determine winner and loser names
+    const winnerName = match.winner.name;
+    const loserName = match.winner.id === match.player1.id ? match.player2.name : match.player1.name;
+    
+    // Format score as winner-loser (always)
+    const winnerSets = match.winner.id === match.player1.id ? player1Sets : player2Sets;
+    const loserSets = match.winner.id === match.player1.id ? player2Sets : player1Sets;
+    const scoreDisplay = `${winnerSets}–${loserSets}`;
 
     return {
       opponent,
       result: isWin ? "Won" : "Lost",
       isWin,
-      score: scoreDisplay
+      score: scoreDisplay,
+      winnerName,
+      loserName
     };
   };
 
-  // Get recent matches (last 10)
-  const recentMatches = player.matchHistory.slice(-10).reverse();
+  // Get recent matches (last 10) - filter matches where this player participated
+  const playerRecentMatches = recentMatches
+    .filter(match => match.player1.id === player.id || match.player2.id === player.id)
+    .slice(-10)
+    .reverse();
 
   // Get head-to-head data sorted by most played
   const headToHeadData = Object.entries(player.headToHead)
@@ -231,10 +229,10 @@ export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {recentMatches.length === 0 ? (
+                {playerRecentMatches.length === 0 ? (
                   <p className="text-muted-foreground text-center py-4">No matches played yet</p>
                 ) : (
-                  recentMatches.map((match, index) => {
+                  playerRecentMatches.map((match, index) => {
                     const matchResult = formatMatchResult(match, player);
                     const opponentCountry = COUNTRIES.find(c => c.name === matchResult.opponent.nationality);
                     
@@ -242,9 +240,9 @@ export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
                       <div key={index} className="flex items-center justify-between p-3 bg-card/30 rounded border border-cyan-400/20">
                         <div className="flex items-center space-x-3 flex-1">
                           <div className="flex items-center space-x-2">
-                            {matchResult.isWin && <span className="text-yellow-400">🏆</span>}
-                            <span className={`font-medium ${matchResult.isWin ? 'text-green-400' : 'text-red-400'}`}>
-                              {matchResult.isWin ? player.name : matchResult.opponent.name}
+                            <span className="text-yellow-400">🏆</span>
+                            <span className="font-bold text-green-400">
+                              {matchResult.winnerName}
                             </span>
                           </div>
                           <span className="text-muted-foreground">vs</span>
@@ -256,8 +254,8 @@ export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
                                 className="tech-flag w-4 h-3"
                               />
                             )}
-                            <span className={`${!matchResult.isWin ? 'font-medium text-green-400' : 'text-muted-foreground'}`}>
-                              {matchResult.opponent.name}
+                            <span className="text-muted-foreground">
+                              {matchResult.loserName}
                             </span>
                           </div>
                         </div>
@@ -287,9 +285,7 @@ export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
                   <p className="text-muted-foreground text-center py-4">No head-to-head data available</p>
                 ) : (
                   headToHeadData.map(({ opponentId, record }) => {
-                    // Find opponent in global context - this would need to be passed as prop
-                    // For now, we'll create a placeholder
-                    const opponentName = `Player ${opponentId}`;
+                    const opponentName = record.opponentName || `Player ${opponentId}`;
                     
                     return (
                       <div key={opponentId} className="flex items-center justify-between p-3 bg-card/30 rounded border border-cyan-400/20">
