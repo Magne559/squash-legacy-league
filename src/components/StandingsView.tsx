@@ -1,4 +1,3 @@
-
 import { Player, Season } from "@/types/squash";
 import { PlayerCard } from "./PlayerCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +9,17 @@ interface StandingsViewProps {
   players: Player[];
   currentSeason: Season | null;
   onPlayerClick: (player: Player) => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-export const StandingsView = ({ players, currentSeason, onPlayerClick }: StandingsViewProps) => {
+export const StandingsView = ({ 
+  players, 
+  currentSeason, 
+  onPlayerClick,
+  activeTab = "division1",
+  onTabChange
+}: StandingsViewProps) => {
   const div1Players = players.filter(p => p.division === 1);
   const div2Players = players.filter(p => p.division === 2);
 
@@ -49,7 +56,7 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
 
   return (
     <div className="p-4">
-      <Tabs defaultValue="division1" className="w-full">
+      <Tabs value={activeTab} onValueChange={onTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-card/50 backdrop-blur-sm border-cyan-400/20">
           <TabsTrigger 
             value="division1" 
@@ -93,8 +100,8 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       player={player} 
                       position={index + 1}
                       onClick={() => onPlayerClick(player)}
-                      showCareerStats={false}
                       currentSeason={currentSeason}
+                      showCareerStats={false}
                     />
                     {index < 4 && (
                       <div className="absolute -right-2 top-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs px-2 py-1 rounded border border-yellow-400 shadow-lg">
@@ -141,8 +148,8 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
                       player={player} 
                       position={index + 6}
                       onClick={() => onPlayerClick(player)}
-                      showCareerStats={false}
                       currentSeason={currentSeason}
+                      showCareerStats={false}
                     />
                     {index === 0 && (
                       <div className="absolute -right-2 top-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs px-2 py-1 rounded border border-blue-400 shadow-lg">

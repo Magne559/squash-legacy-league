@@ -1,4 +1,5 @@
-import { useState } from "react";
+
+import { useState, useEffect } from "react";
 import { Player } from "@/types/squash";
 import { useSquashLeague } from "@/hooks/useSquashLeague";
 import { StandingsView } from "@/components/StandingsView";
@@ -7,8 +8,20 @@ import { PlayerProfile } from "@/components/PlayerProfile";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
+interface NavigationState {
+  activeTab: string;
+  standingsTab: string;
+  scrollPosition: number;
+}
+
 const Index = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [navigationState, setNavigationState] = useState<NavigationState>({
+    activeTab: 'standings',
+    standingsTab: 'division1',
+    scrollPosition: 0
+  });
+
   const {
     players,
     currentSeason,
@@ -20,9 +33,63 @@ const Index = () => {
     resetLeague
   } = useSquashLeague();
 
+  // Load navigation state from localStorage
+  useEffect(() => {
+    const savedState = localStorage.getItem('navigationState');
+    if (savedState) {
+      try {
+        const parsed = JSON.parse(savedState);
+        setNavigationState(parsed);
+      } catch (error) {
+        console.error('Failed to parse navigation state:', error);
+      }
+    }
+  }, []);
+
+  // Save navigation state to localStorage
+  const saveNavigationState = (newState: Partial<NavigationState>) => {
+    const updatedState = { ...navigationState, ...newState };
+    setNavigationState(updatedState);
+    localStorage.setItem('navigationState', JSON.stringify(updatedState));
+  };
+
+  // Handle tab changes
+  const handleTabChange = (tab: string) => {
+    // Save current scroll position before changing tabs
+    const currentScrollPosition = window.scrollY;
+    saveNavigationState({ 
+      activeTab: tab,
+      scrollPosition: currentScrollPosition
+    });
+  };
+
+  // Handle player selection with state preservation
+  const handlePlayerClick = (player: Player) => {
+    // Save current state before navigating to player profile
+    const currentScrollPosition = window.scrollY;
+    saveNavigationState({ scrollPosition: currentScrollPosition });
+    setSelectedPlayer(player);
+  };
+
+  // Handle back navigation with state restoration
+  const handleBackFromPlayer = () => {
+    setSelectedPlayer(null);
+    // Restore scroll position after a brief delay to allow DOM to update
+    setTimeout(() => {
+      window.scrollTo(0, navigationState.scrollPosition);
+    }, 100);
+  };
+
   const handleResetLeague = () => {
     if (confirm('Are you sure you want to reset the entire league? This will delete all progress and cannot be undone.')) {
       resetLeague();
+      // Clear navigation state on reset
+      localStorage.removeItem('navigationState');
+      setNavigationState({
+        activeTab: 'standings',
+        standingsTab: 'division1',
+        scrollPosition: 0
+      });
     }
   };
 
@@ -30,7 +97,7 @@ const Index = () => {
     return (
       <PlayerProfile 
         player={selectedPlayer} 
-        onBack={() => setSelectedPlayer(null)} 
+        onBack={handleBackFromPlayer}
       />
     );
   }
@@ -57,7 +124,7 @@ const Index = () => {
         <div className="mt-3 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>
       </div>
 
-      <Tabs defaultValue="standings" className="w-full">
+      <Tabs value={navigationState.activeTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-card/50 backdrop-blur-sm border-cyan-400/20">
           <TabsTrigger value="standings" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
             Standings
@@ -74,7 +141,9 @@ const Index = () => {
           <StandingsView 
             players={players}
             currentSeason={currentSeason}
-            onPlayerClick={setSelectedPlayer}
+            onPlayerClick={handlePlayerClick}
+            activeTab={navigationState.standingsTab}
+            onTabChange={(tab) => saveNavigationState({ standingsTab: tab })}
           />
         </TabsContent>
         
@@ -104,7 +173,7 @@ const Index = () => {
                     <div
                       key={player.id}
                       className="tech-card p-4 cursor-pointer"
-                      onClick={() => setSelectedPlayer(player)}
+                      onClick={() => handlePlayerClick(player)}
                     >
                       <div className="flex items-center justify-between">
                         <div>
