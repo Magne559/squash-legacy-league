@@ -2,10 +2,10 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { Season, Player } from '@/types/squash';
+import { SeasonArchive, Player } from '@/types/squash';
 
 interface ArchiveViewProps {
-  seasonArchive: Season[];
+  seasonArchive: SeasonArchive[];
   players: Player[];
   onBack: () => void;
 }
@@ -29,24 +29,30 @@ export const ArchiveView = ({ seasonArchive, players, onBack }: ArchiveViewProps
             </CardContent>
           </Card>
         ) : (
-          seasonArchive.map((season) => (
-            <Card key={season.number}>
+          seasonArchive.map((archive) => (
+            <Card key={archive.season}>
               <CardHeader>
-                <CardTitle>Season {season.number}</CardTitle>
+                <CardTitle>Season {archive.season}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div>
-                    <p className="text-sm text-muted-foreground">Total Matches</p>
-                    <p className="text-lg font-semibold">{season.matches.length}</p>
+                    <p className="text-sm text-muted-foreground">Division 1 Winner</p>
+                    <p className="text-lg font-semibold">
+                      {archive.division1FinalStandings[0]?.name || 'N/A'}
+                    </p>
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">Completed</p>
-                    <p className="text-lg font-semibold">{season.matches.filter(m => m.completed).length}</p>
+                    <p className="text-sm text-muted-foreground">Division 2 Winner</p>
+                    <p className="text-lg font-semibold">
+                      {archive.division2FinalStandings[0]?.name || 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Cup Winner</p>
-                    <p className="text-lg font-semibold">{season.cupWinner || 'N/A'}</p>
+                    <p className="text-lg font-semibold">
+                      {archive.cupResults.winner?.name || 'N/A'}
+                    </p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Status</p>
