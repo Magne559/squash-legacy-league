@@ -1,4 +1,3 @@
-
 import { Player, Season } from "@/types/squash";
 import { PlayerCard } from "./PlayerCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,9 +9,17 @@ interface StandingsViewProps {
   players: Player[];
   currentSeason: Season | null;
   onPlayerClick: (player: Player) => void;
+  selectedDivision: string;
+  onDivisionChange: (division: string) => void;
 }
 
-export const StandingsView = ({ players, currentSeason, onPlayerClick }: StandingsViewProps) => {
+export const StandingsView = ({ 
+  players, 
+  currentSeason, 
+  onPlayerClick,
+  selectedDivision,
+  onDivisionChange
+}: StandingsViewProps) => {
   const div1Players = players.filter(p => p.division === 1);
   const div2Players = players.filter(p => p.division === 2);
 
@@ -49,7 +56,7 @@ export const StandingsView = ({ players, currentSeason, onPlayerClick }: Standin
 
   return (
     <div className="p-4">
-      <Tabs defaultValue="division1" className="w-full">
+      <Tabs value={selectedDivision} onValueChange={onDivisionChange} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-card/50 backdrop-blur-sm border-cyan-400/20">
           <TabsTrigger 
             value="division1" 

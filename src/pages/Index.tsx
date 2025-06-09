@@ -1,6 +1,8 @@
+
 import { useState } from "react";
 import { Player } from "@/types/squash";
 import { useSquashLeague } from "@/hooks/useSquashLeague";
+import { useNavigationState } from "@/hooks/useNavigationState";
 import { StandingsView } from "@/components/StandingsView";
 import { MatchCenter } from "@/components/MatchCenter";
 import { PlayerProfile } from "@/components/PlayerProfile";
@@ -9,6 +11,7 @@ import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const { navigationState, updateState, saveScrollPosition, restoreScrollPosition } = useNavigationState();
   const {
     players,
     currentSeason,
@@ -26,11 +29,32 @@ const Index = () => {
     }
   };
 
+  const handlePlayerClick = (player: Player) => {
+    saveScrollPosition();
+    setSelectedPlayer(player);
+  };
+
+  const handleBackFromPlayer = () => {
+    setSelectedPlayer(null);
+    restoreScrollPosition();
+  };
+
+  const handleTabChange = (tab: string) => {
+    updateState({ selectedTab: tab });
+  };
+
+  const handleDivisionChange = (division: string) => {
+    updateState({ selectedDivision: division });
+  };
+
   if (selectedPlayer) {
     return (
       <PlayerProfile 
         player={selectedPlayer} 
-        onBack={() => setSelectedPlayer(null)} 
+        onBack={handleBackFromPlayer}
+        recentMatches={currentSeason?.matches.filter(m => 
+          m.completed && (m.player1.id === selectedPlayer.id || m.player2.id === selectedPlayer.id)
+        ).slice(-10) || []}
       />
     );
   }
@@ -57,7 +81,7 @@ const Index = () => {
         <div className="mt-3 h-1 bg-gradient-to-r from-transparent via-cyan-500 to-transparent opacity-30"></div>
       </div>
 
-      <Tabs defaultValue="standings" className="w-full">
+      <Tabs value={navigationState.selectedTab} onValueChange={handleTabChange} className="w-full">
         <TabsList className="grid w-full grid-cols-3 bg-card/50 backdrop-blur-sm border-cyan-400/20">
           <TabsTrigger value="standings" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
             Standings
@@ -74,7 +98,9 @@ const Index = () => {
           <StandingsView 
             players={players}
             currentSeason={currentSeason}
-            onPlayerClick={setSelectedPlayer}
+            onPlayerClick={handlePlayerClick}
+            selectedDivision={navigationState.selectedDivision}
+            onDivisionChange={handleDivisionChange}
           />
         </TabsContent>
         
@@ -104,7 +130,7 @@ const Index = () => {
                     <div
                       key={player.id}
                       className="tech-card p-4 cursor-pointer"
-                      onClick={() => setSelectedPlayer(player)}
+                      onClick={() => handlePlayerClick(player)}
                     >
                       <div className="flex items-center justify-between">
                         <div>

@@ -1,4 +1,3 @@
-
 import { Season, Match } from "@/types/squash";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,26 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
   const getPlayerFlag = (playerName: string, nationality: string) => {
     const country = COUNTRIES.find(c => c.name === nationality);
     return country?.flag || "🏴";
+  };
+
+  const formatMatchResult = (match: Match) => {
+    if (!match.winner) return null;
+    
+    const winnerSets = match.sets.filter(s => 
+      (s === 1 && match.winner?.id === match.player1.id) || 
+      (s === 2 && match.winner?.id === match.player2.id)
+    ).length;
+    
+    const loserSets = match.sets.length - winnerSets;
+    
+    const winner = match.winner;
+    const loser = match.winner.id === match.player1.id ? match.player2 : match.player1;
+    
+    return {
+      winner,
+      loser,
+      score: `${winnerSets}–${loserSets}`
+    };
   };
 
   const leagueMatches = currentSeason.matches.filter(m => m.matchType === 'league');
@@ -111,31 +130,37 @@ export const MatchCenter = ({ currentSeason, onSimulateMatch, onSimulateCup, onE
               </CardHeader>
               <CardContent>
                 <div className="space-y-2">
-                  {recentMatches.map((match) => (
-                    <div key={match.id} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
-                      <div className="flex items-center space-x-3 text-sm flex-1">
-                        <span className="text-lg">{getPlayerFlag(match.player1.name, match.player1.nationality)}</span>
-                        <span className={`${match.winner?.id === match.player1.id ? 'font-bold text-white' : 'text-muted-foreground'}`}>
-                          {match.player1.name}
-                        </span>
-                        <span className="text-muted-foreground">vs</span>
-                        <span className="text-lg">{getPlayerFlag(match.player2.name, match.player2.nationality)}</span>
-                        <span className={`${match.winner?.id === match.player2.id ? 'font-bold text-white' : 'text-muted-foreground'}`}>
-                          {match.player2.name}
-                        </span>
-                        {match.matchType !== 'league' && (
-                          <span className="text-xs text-cyan-400 ml-2">
-                            {match.matchType === 'cup-semi' ? 'SF' : 
-                             match.matchType === 'cup-final' ? 'F' : 
-                             match.matchType === 'cup-3rd' ? '3rd' : 'Cup'}
+                  {recentMatches.map((match) => {
+                    const result = formatMatchResult(match);
+                    if (!result) return null;
+                    
+                    return (
+                      <div key={match.id} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
+                        <div className="flex items-center space-x-3 text-sm flex-1">
+                          <span className="text-lg">{getPlayerFlag(result.winner.name, result.winner.nationality)}</span>
+                          <span className="text-yellow-400 text-xs">🏆</span>
+                          <span className="font-bold text-white">
+                            {result.winner.name}
                           </span>
-                        )}
+                          <span className="text-muted-foreground">vs</span>
+                          <span className="text-lg">{getPlayerFlag(result.loser.name, result.loser.nationality)}</span>
+                          <span className="text-muted-foreground">
+                            {result.loser.name}
+                          </span>
+                          {match.matchType !== 'league' && (
+                            <span className="text-xs text-cyan-400 ml-2">
+                              {match.matchType === 'cup-semi' ? 'SF' : 
+                               match.matchType === 'cup-final' ? 'F' : 
+                               match.matchType === 'cup-3rd' ? '3rd' : 'Cup'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm font-mono text-cyan-400 font-bold">
+                          {result.score}
+                        </div>
                       </div>
-                      <div className="text-sm font-mono text-cyan-400">
-                        {match.sets.filter(s => s === 1).length}-{match.sets.filter(s => s === 2).length}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
