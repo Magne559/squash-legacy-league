@@ -1,4 +1,3 @@
-
 import { Player, Match, Season } from "@/types/squash";
 
 export const generateDoubleRoundRobinSchedule = (players: Player[], division: 1 | 2, season: number): Match[] => {
@@ -10,36 +9,34 @@ export const generateDoubleRoundRobinSchedule = (players: Player[], division: 1 
     return matches;
   }
   
-  // Standard 10-match double round-robin schedule for 5 players
+  // Fixed standard 20-round schedule for 5 players playing each other twice
   const schedule = [
-    // First round robin
-    [0, 1], // Round 1: Player 1 vs Player 2
-    [2, 3], // Round 2: Player 3 vs Player 4
-    [4, 0], // Round 3: Player 5 vs Player 1
-    [1, 2], // Round 4: Player 2 vs Player 3
-    [3, 4], // Round 5: Player 4 vs Player 5
-    [0, 2], // Round 6: Player 1 vs Player 3
-    [1, 3], // Round 7: Player 2 vs Player 4
-    [4, 1], // Round 8: Player 5 vs Player 2
-    [0, 3], // Round 9: Player 1 vs Player 4
-    [2, 4], // Round 10: Player 3 vs Player 5
+    // First round robin (rounds 1-10)
+    { round: 1, players: [0, 1] }, // Player 1 vs Player 2
+    { round: 2, players: [2, 3] }, // Player 3 vs Player 4
+    { round: 3, players: [4, 0] }, // Player 5 vs Player 1
+    { round: 4, players: [1, 2] }, // Player 2 vs Player 3
+    { round: 5, players: [3, 4] }, // Player 4 vs Player 5
+    { round: 6, players: [0, 2] }, // Player 1 vs Player 3
+    { round: 7, players: [1, 3] }, // Player 2 vs Player 4
+    { round: 8, players: [4, 1] }, // Player 5 vs Player 2
+    { round: 9, players: [0, 3] }, // Player 1 vs Player 4
+    { round: 10, players: [2, 4] }, // Player 3 vs Player 5
     
-    // Second round robin (reverse fixtures)
-    [1, 0], // Round 11: Player 2 vs Player 1
-    [3, 2], // Round 12: Player 4 vs Player 3
-    [0, 4], // Round 13: Player 1 vs Player 5
-    [2, 1], // Round 14: Player 3 vs Player 2
-    [4, 3], // Round 15: Player 5 vs Player 4
-    [2, 0], // Round 16: Player 3 vs Player 1
-    [3, 1], // Round 17: Player 4 vs Player 2
-    [1, 4], // Round 18: Player 2 vs Player 5
-    [3, 0], // Round 19: Player 4 vs Player 1
-    [4, 2], // Round 20: Player 5 vs Player 3
+    // Second round robin (rounds 11-20)
+    { round: 11, players: [1, 0] }, // Player 2 vs Player 1
+    { round: 12, players: [3, 2] }, // Player 4 vs Player 3
+    { round: 13, players: [0, 4] }, // Player 1 vs Player 5
+    { round: 14, players: [2, 1] }, // Player 3 vs Player 2
+    { round: 15, players: [4, 3] }, // Player 5 vs Player 4
+    { round: 16, players: [2, 0] }, // Player 3 vs Player 1
+    { round: 17, players: [3, 1] }, // Player 4 vs Player 2
+    { round: 18, players: [1, 4] }, // Player 2 vs Player 5
+    { round: 19, players: [3, 0] }, // Player 4 vs Player 1
+    { round: 20, players: [4, 2] }, // Player 5 vs Player 3
   ];
   
-  schedule.forEach(([p1Index, p2Index], matchIndex) => {
-    const round = Math.floor(matchIndex / 2) + 1; // 2 matches per round
-    
+  schedule.forEach(({ round, players: [p1Index, p2Index] }) => {
     matches.push({
       id: crypto.randomUUID(),
       player1: playerList[p1Index],

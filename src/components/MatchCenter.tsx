@@ -20,7 +20,7 @@ export const MatchCenter = ({
   onSimulateCup,
   onEndSeason 
 }: MatchCenterProps) => {
-  const [selectedTab, setSelectedTab] = useState("upcoming");
+  const [selectedTab, setSelectedTab] = useState("simulate");
 
   if (!currentSeason) {
     return (
@@ -33,11 +33,6 @@ export const MatchCenter = ({
       </div>
     );
   }
-
-  const getPlayerFlag = (playerName: string, nationality: string) => {
-    const country = COUNTRIES.find(c => c.name === nationality);
-    return country?.flag || "🏴";
-  };
 
   const formatMatchResult = (match: Match) => {
     if (!match.winner) return null;
@@ -206,7 +201,7 @@ export const MatchCenter = ({
                     <div className="text-center mb-3">
                       <div className="text-sm text-muted-foreground mb-2">
                         {nextMatch.matchType === 'league' ? (
-                          `Division ${nextMatch.division} League`
+                          `Division ${nextMatch.division} League - Round ${nextMatch.round}`
                         ) : nextMatch.matchType === 'cup-semi' ? (
                           'Cup Semifinal'
                         ) : nextMatch.matchType === 'cup-3rd' ? (
@@ -217,13 +212,29 @@ export const MatchCenter = ({
                       </div>
                       <div className="flex items-center justify-center space-x-4">
                         <div className="text-center flex-1">
-                          <div className="text-2xl mb-2">{getPlayerFlag(nextMatch.player1.name, nextMatch.player1.nationality)}</div>
+                          <div className="text-2xl mb-2">
+                            {COUNTRIES.find(c => c.name === nextMatch.player1.nationality)?.flag && (
+                              <img 
+                                src={COUNTRIES.find(c => c.name === nextMatch.player1.nationality)?.flag} 
+                                alt={`${nextMatch.player1.nationality} flag`}
+                                className="tech-flag w-8 h-5 mx-auto"
+                              />
+                            )}
+                          </div>
                           <div className="font-semibold text-white text-base">{nextMatch.player1.name}</div>
                           <div className="text-sm text-cyan-400">Rating: {nextMatch.player1.rating.toFixed(0)}</div>
                         </div>
                         <div className="text-2xl font-bold text-cyan-400 px-4">VS</div>
                         <div className="text-center flex-1">
-                          <div className="text-2xl mb-2">{getPlayerFlag(nextMatch.player2.name, nextMatch.player2.nationality)}</div>
+                          <div className="text-2xl mb-2">
+                            {COUNTRIES.find(c => c.name === nextMatch.player2.nationality)?.flag && (
+                              <img 
+                                src={COUNTRIES.find(c => c.name === nextMatch.player2.nationality)?.flag} 
+                                alt={`${nextMatch.player2.nationality} flag`}
+                                className="tech-flag w-8 h-5 mx-auto"
+                              />
+                            )}
+                          </div>
                           <div className="font-semibold text-white text-base">{nextMatch.player2.name}</div>
                           <div className="text-sm text-cyan-400">Rating: {nextMatch.player2.rating.toFixed(0)}</div>
                         </div>
@@ -256,16 +267,31 @@ export const MatchCenter = ({
                         const result = formatMatchResult(match);
                         if (!result) return null;
                         
+                        const winnerCountry = COUNTRIES.find(c => c.name === result.winner.nationality);
+                        const loserCountry = COUNTRIES.find(c => c.name === result.loser.nationality);
+                        
                         return (
                           <div key={match.id} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
                             <div className="flex items-center space-x-3 text-sm flex-1">
-                              <span className="text-lg">{getPlayerFlag(result.winner.name, result.winner.nationality)}</span>
+                              {winnerCountry?.flag && (
+                                <img 
+                                  src={winnerCountry.flag} 
+                                  alt={`${result.winner.nationality} flag`}
+                                  className="tech-flag w-5 h-3"
+                                />
+                              )}
                               <span className="text-yellow-400 text-xs">🏆</span>
                               <span className="font-bold text-white">
                                 {result.winner.name}
                               </span>
                               <span className="text-muted-foreground">vs</span>
-                              <span className="text-lg">{getPlayerFlag(result.loser.name, result.loser.nationality)}</span>
+                              {loserCountry?.flag && (
+                                <img 
+                                  src={loserCountry.flag} 
+                                  alt={`${result.loser.nationality} flag`}
+                                  className="tech-flag w-5 h-3"
+                                />
+                              )}
                               <span className="text-muted-foreground">
                                 {result.loser.name}
                               </span>
@@ -330,7 +356,7 @@ export const MatchCenter = ({
                     <div className="text-center mb-3">
                       <div className="text-sm text-muted-foreground mb-2">
                         {nextMatch.matchType === 'league' ? (
-                          `Division ${nextMatch.division} League`
+                          `Division ${nextMatch.division} League - Round ${nextMatch.round}`
                         ) : nextMatch.matchType === 'cup-semi' ? (
                           'Cup Semifinal'
                         ) : nextMatch.matchType === 'cup-3rd' ? (
@@ -341,13 +367,29 @@ export const MatchCenter = ({
                       </div>
                       <div className="flex items-center justify-center space-x-4">
                         <div className="text-center flex-1">
-                          <div className="text-2xl mb-2">{getPlayerFlag(nextMatch.player1.name, nextMatch.player1.nationality)}</div>
+                          <div className="text-2xl mb-2">
+                            {COUNTRIES.find(c => c.name === nextMatch.player1.nationality)?.flag && (
+                              <img 
+                                src={COUNTRIES.find(c => c.name === nextMatch.player1.nationality)?.flag} 
+                                alt={`${nextMatch.player1.nationality} flag`}
+                                className="tech-flag w-8 h-5 mx-auto"
+                              />
+                            )}
+                          </div>
                           <div className="font-semibold text-white text-base">{nextMatch.player1.name}</div>
                           <div className="text-sm text-cyan-400">Rating: {nextMatch.player1.rating.toFixed(0)}</div>
                         </div>
                         <div className="text-2xl font-bold text-cyan-400 px-4">VS</div>
                         <div className="text-center flex-1">
-                          <div className="text-2xl mb-2">{getPlayerFlag(nextMatch.player2.name, nextMatch.player2.nationality)}</div>
+                          <div className="text-2xl mb-2">
+                            {COUNTRIES.find(c => c.name === nextMatch.player2.nationality)?.flag && (
+                              <img 
+                                src={COUNTRIES.find(c => c.name === nextMatch.player2.nationality)?.flag} 
+                                alt={`${nextMatch.player2.nationality} flag`}
+                                className="tech-flag w-8 h-5 mx-auto"
+                              />
+                            )}
+                          </div>
                           <div className="font-semibold text-white text-base">{nextMatch.player2.name}</div>
                           <div className="text-sm text-cyan-400">Rating: {nextMatch.player2.rating.toFixed(0)}</div>
                         </div>
@@ -380,16 +422,31 @@ export const MatchCenter = ({
                         const result = formatMatchResult(match);
                         if (!result) return null;
                         
+                        const winnerCountry = COUNTRIES.find(c => c.name === result.winner.nationality);
+                        const loserCountry = COUNTRIES.find(c => c.name === result.loser.nationality);
+                        
                         return (
                           <div key={match.id} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
                             <div className="flex items-center space-x-3 text-sm flex-1">
-                              <span className="text-lg">{getPlayerFlag(result.winner.name, result.winner.nationality)}</span>
+                              {winnerCountry?.flag && (
+                                <img 
+                                  src={winnerCountry.flag} 
+                                  alt={`${result.winner.nationality} flag`}
+                                  className="tech-flag w-5 h-3"
+                                />
+                              )}
                               <span className="text-yellow-400 text-xs">🏆</span>
                               <span className="font-bold text-white">
                                 {result.winner.name}
                               </span>
                               <span className="text-muted-foreground">vs</span>
-                              <span className="text-lg">{getPlayerFlag(result.loser.name, result.loser.nationality)}</span>
+                              {loserCountry?.flag && (
+                                <img 
+                                  src={loserCountry.flag} 
+                                  alt={`${result.loser.nationality} flag`}
+                                  className="tech-flag w-5 h-3"
+                                />
+                              )}
                               <span className="text-muted-foreground">
                                 {result.loser.name}
                               </span>
