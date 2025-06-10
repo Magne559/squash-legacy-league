@@ -170,13 +170,30 @@ export const useSquashLeague = () => {
     }
     
     const match = currentSeason.matches[currentSeason.currentMatchIndex];
+    
+    // Create copies of players to avoid direct mutation
+    const player1Copy = { ...match.player1 };
+    const player2Copy = { ...match.player2 };
+    
     const result = simulateMatch(
-      match.player1, 
-      match.player2, 
+      player1Copy, 
+      player2Copy, 
       match.matchType, 
       currentSeason.number, 
       match.round
     );
+    
+    // Update the players state with the modified copies
+    setPlayers(prevPlayers => {
+      return prevPlayers.map(player => {
+        if (player.id === player1Copy.id) {
+          return player1Copy;
+        } else if (player.id === player2Copy.id) {
+          return player2Copy;
+        }
+        return player;
+      });
+    });
     
     // Update league points for league matches
     if (result.matchType === 'league' && result.winner) {
@@ -220,7 +237,14 @@ export const useSquashLeague = () => {
     setCurrentSeason(updatedSeason);
     
     // Save state after match simulation
-    saveGameState({ currentSeason: updatedSeason });
+    saveGameState({ 
+      players: players.map(player => {
+        if (player.id === player1Copy.id) return player1Copy;
+        if (player.id === player2Copy.id) return player2Copy;
+        return player;
+      }), 
+      currentSeason: updatedSeason 
+    });
   };
 
   // Add simulateCupMatch function (same as simulateNextMatch for now)
