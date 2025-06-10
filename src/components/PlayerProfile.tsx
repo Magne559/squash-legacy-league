@@ -1,5 +1,5 @@
 
-import { Player } from "@/types/squash";
+import { Player, Match } from "@/types/squash";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -9,9 +9,10 @@ import { COUNTRIES } from "@/utils/countries";
 interface PlayerProfileProps {
   player: Player;
   onBack: () => void;
+  recentMatches: Match[];
 }
 
-export const PlayerProfile = ({ player, onBack }: PlayerProfileProps) => {
+export const PlayerProfile = ({ player, onBack, recentMatches }: PlayerProfileProps) => {
   const country = COUNTRIES.find(c => c.name === player.nationality);
   const winPercentage = player.gamesPlayed > 0 ? (player.gamesWon / player.gamesPlayed * 100).toFixed(1) : '0.0';
 
