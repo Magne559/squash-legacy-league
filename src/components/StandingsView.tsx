@@ -1,3 +1,4 @@
+
 import { Player, Season } from "@/types/squash";
 import { PlayerCard } from "./PlayerCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,7 +96,7 @@ export const StandingsView = ({
             <CardContent>
               <div className="space-y-2">
                 {div1Standings.map((player, index) => (
-                  <div key={player.id} className="relative">
+                  <div key={player.id} className="relative pr-16">
                     <PlayerCard 
                       player={player} 
                       position={index + 1}
@@ -104,12 +105,12 @@ export const StandingsView = ({
                       currentSeason={currentSeason}
                     />
                     {index < 4 && (
-                      <div className="absolute -right-2 top-2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs px-2 py-1 rounded border border-yellow-400 shadow-lg">
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-gradient-to-r from-yellow-500 to-orange-500 text-black text-xs px-2 py-1 rounded border border-yellow-400 shadow-lg whitespace-nowrap">
                         🏆 Cup
                       </div>
                     )}
                     {index === 4 && (
-                      <div className="absolute -right-2 top-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded border border-red-400 shadow-lg">
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs px-2 py-1 rounded border border-red-400 shadow-lg whitespace-nowrap">
                         🔻 Rel
                       </div>
                     )}
@@ -143,7 +144,7 @@ export const StandingsView = ({
             <CardContent>
               <div className="space-y-2">
                 {div2Standings.map((player, index) => (
-                  <div key={player.id} className="relative">
+                  <div key={player.id} className="relative pr-16">
                     <PlayerCard 
                       player={player} 
                       position={index + 6}
@@ -152,7 +153,7 @@ export const StandingsView = ({
                       currentSeason={currentSeason}
                     />
                     {index === 0 && (
-                      <div className="absolute -right-2 top-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs px-2 py-1 rounded border border-blue-400 shadow-lg">
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs px-2 py-1 rounded border border-blue-400 shadow-lg whitespace-nowrap">
                         🔼 Pro
                       </div>
                     )}

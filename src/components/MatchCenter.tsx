@@ -80,7 +80,7 @@ export const MatchCenter = ({
   const completedMatches = currentSeason.matches.filter(m => m.completed);
 
   return (
-    <div className="p-4">
+    <div className="p-4 space-y-4">
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
         <TabsList className="grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm border-cyan-400/20">
           <TabsTrigger value="upcoming" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
@@ -101,7 +101,7 @@ export const MatchCenter = ({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="upcoming">
+        <TabsContent value="upcoming" className="mt-4">
           <Card className="tech-card">
             <CardHeader>
               <CardTitle className="text-cyan-400">📅 Upcoming Matches</CardTitle>
@@ -118,37 +118,37 @@ export const MatchCenter = ({
                     const player2Country = COUNTRIES.find(c => c.name === match.player2.nationality);
                     
                     return (
-                      <div key={match.id} className={`p-3 rounded border transition-all ${
+                      <div key={match.id} className={`p-4 rounded border transition-all ${
                         index === 0 ? 'bg-cyan-500/10 border-cyan-400/40' : 'bg-card/50 border-cyan-400/20'
                       }`}>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="text-sm text-muted-foreground">
+                          <div className="flex items-center space-x-4 flex-1">
+                            <div className="text-sm text-muted-foreground min-w-0">
                               Round {match.round}
                             </div>
-                            <div className="flex items-center space-x-3">
-                              <div className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 min-w-0">
                                 <FlagImage 
                                   src={player1Country?.flag || ''}
                                   alt={`${match.player1.nationality} flag`}
-                                  className="w-5 h-3"
+                                  className="w-5 h-3 flex-shrink-0"
                                   nationality={match.player1.nationality}
                                 />
-                                <span className="font-medium text-white">{match.player1.name}</span>
+                                <span className="font-medium text-white truncate">{match.player1.name}</span>
                               </div>
-                              <span className="text-muted-foreground">vs</span>
-                              <div className="flex items-center space-x-2">
+                              <span className="text-muted-foreground flex-shrink-0">vs</span>
+                              <div className="flex items-center space-x-2 min-w-0">
                                 <FlagImage 
                                   src={player2Country?.flag || ''}
                                   alt={`${match.player2.nationality} flag`}
-                                  className="w-5 h-3"
+                                  className="w-5 h-3 flex-shrink-0"
                                   nationality={match.player2.nationality}
                                 />
-                                <span className="font-medium text-white">{match.player2.name}</span>
+                                <span className="font-medium text-white truncate">{match.player2.name}</span>
                               </div>
                             </div>
                           </div>
-                          <div className="text-right">
+                          <div className="text-right flex-shrink-0 ml-4">
                             <div className="text-sm text-cyan-400 font-medium">
                               {match.matchType === 'league' ? `Div ${match.division}` : 
                                match.matchType === 'cup-final' ? 'Cup Final' :
@@ -169,15 +169,15 @@ export const MatchCenter = ({
           </Card>
         </TabsContent>
 
-        <TabsContent value="simulate">
+        <TabsContent value="simulate" className="mt-4">
           <Card className="tech-card border-cyan-400/30">
             <CardHeader>
               <CardTitle className="text-cyan-400">
                 Season {currentSeason.number} - {leaguePhaseComplete ? 'Cup Phase' : 'League Phase'}
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
                   <div className="text-2xl font-bold text-cyan-400">{completedLeague}/{totalLeague}</div>
                   <div className="text-sm text-muted-foreground">League Matches</div>
@@ -195,10 +195,10 @@ export const MatchCenter = ({
               </div>
 
               {nextMatch && (
-                <Card className="mb-4 bg-card/70 border-cyan-400/40">
+                <Card className="bg-card/70 border-cyan-400/40">
                   <CardContent className="p-4">
-                    <div className="text-center mb-3">
-                      <div className="text-sm text-muted-foreground mb-2">
+                    <div className="text-center space-y-4">
+                      <div className="text-sm text-muted-foreground">
                         {nextMatch.matchType === 'league' ? (
                           `Division ${nextMatch.division} League - Round ${nextMatch.round}`
                         ) : nextMatch.matchType === 'cup-semi' ? (
@@ -209,9 +209,9 @@ export const MatchCenter = ({
                           'Cup Final'
                         ) : 'Cup Tournament'}
                       </div>
-                      <div className="flex items-center justify-center space-x-4">
+                      <div className="flex items-center justify-center space-x-6">
                         <div className="text-center flex-1">
-                          <div className="text-2xl mb-2 flex justify-center">
+                          <div className="mb-2 flex justify-center">
                             <FlagImage 
                               src={COUNTRIES.find(c => c.name === nextMatch.player1.nationality)?.flag || ''}
                               alt={`${nextMatch.player1.nationality} flag`}
@@ -224,7 +224,7 @@ export const MatchCenter = ({
                         </div>
                         <div className="text-2xl font-bold text-cyan-400 px-4">VS</div>
                         <div className="text-center flex-1">
-                          <div className="text-2xl mb-2 flex justify-center">
+                          <div className="mb-2 flex justify-center">
                             <FlagImage 
                               src={COUNTRIES.find(c => c.name === nextMatch.player2.nationality)?.flag || ''}
                               alt={`${nextMatch.player2.nationality} flag`}
@@ -236,19 +236,19 @@ export const MatchCenter = ({
                           <div className="text-sm text-cyan-400">Rating: {nextMatch.player2.rating.toFixed(0)}</div>
                         </div>
                       </div>
+                      <Button 
+                        onClick={nextMatch.matchType.includes('cup') ? onSimulateCup : onSimulateMatch}
+                        className="w-full"
+                      >
+                        Simulate {nextMatch.matchType.includes('cup') ? 'Cup Match' : 'Match'}
+                      </Button>
                     </div>
-                    <Button 
-                      onClick={nextMatch.matchType.includes('cup') ? onSimulateCup : onSimulateMatch}
-                      className="w-full"
-                    >
-                      Simulate {nextMatch.matchType.includes('cup') ? 'Cup Match' : 'Match'}
-                    </Button>
                   </CardContent>
                 </Card>
               )}
 
               {allMatchesComplete && (
-                <Button onClick={onEndSeason} className="w-full mb-4" variant="default">
+                <Button onClick={onEndSeason} className="w-full" variant="default">
                   End Season & Start New Season
                 </Button>
               )}
@@ -269,36 +269,36 @@ export const MatchCenter = ({
                         
                         return (
                           <div key={match.id} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
-                            <div className="flex items-center space-x-3 text-sm flex-1">
+                            <div className="flex items-center space-x-3 text-sm flex-1 min-w-0">
                               <FlagImage 
                                 src={winnerCountry?.flag || ''}
                                 alt={`${result.winner.nationality} flag`}
-                                className="w-5 h-3"
+                                className="w-5 h-3 flex-shrink-0"
                                 nationality={result.winner.nationality}
                               />
-                              <span className="text-yellow-400 text-xs">🏆</span>
-                              <span className="font-bold text-white">
+                              <span className="text-yellow-400 text-xs flex-shrink-0">🏆</span>
+                              <span className="font-bold text-white truncate">
                                 {result.winner.name}
                               </span>
-                              <span className="text-muted-foreground">vs</span>
+                              <span className="text-muted-foreground flex-shrink-0">vs</span>
                               <FlagImage 
                                 src={loserCountry?.flag || ''}
                                 alt={`${result.loser.nationality} flag`}
-                                className="w-5 h-3"
+                                className="w-5 h-3 flex-shrink-0"
                                 nationality={result.loser.nationality}
                               />
-                              <span className="text-muted-foreground">
+                              <span className="text-muted-foreground truncate">
                                 {result.loser.name}
                               </span>
                               {match.matchType !== 'league' && (
-                                <span className="text-xs text-cyan-400 ml-2">
+                                <span className="text-xs text-cyan-400 flex-shrink-0">
                                   {match.matchType === 'cup-semi' ? 'SF' : 
                                    match.matchType === 'cup-final' ? 'F' : 
                                    match.matchType === 'cup-3rd' ? '3rd' : 'Cup'}
                                 </span>
                               )}
                             </div>
-                            <div className="text-sm font-mono text-cyan-400 font-bold">
+                            <div className="text-sm font-mono text-cyan-400 font-bold flex-shrink-0 ml-2">
                               {result.score}
                             </div>
                           </div>
@@ -312,7 +312,7 @@ export const MatchCenter = ({
           </Card>
         </TabsContent>
 
-        <TabsContent value="results">
+        <TabsContent value="results" className="mt-4">
           <RecentResults 
             matches={completedMatches}
             title="📊 Season Results"
@@ -320,7 +320,7 @@ export const MatchCenter = ({
           />
         </TabsContent>
 
-        <TabsContent value="cup">
+        <TabsContent value="cup" className="mt-4">
           <Card className="tech-card border-cyan-400/30">
             <CardHeader>
               <CardTitle className="text-cyan-400">
