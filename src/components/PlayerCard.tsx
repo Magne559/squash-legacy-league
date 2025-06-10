@@ -2,6 +2,7 @@
 import { Player, Season } from "@/types/squash";
 import { Card } from "@/components/ui/card";
 import { COUNTRIES } from "@/utils/countries";
+import { FlagImage } from "./FlagImage";
 
 interface PlayerCardProps {
   player: Player;
@@ -93,13 +94,12 @@ export const PlayerCard = ({
           )}
           <div className="flex-1 min-w-0">
             <div className="flex items-center space-x-3 mb-2">
-              {country?.flag && (
-                <img 
-                  src={country.flag} 
-                  alt={`${player.nationality} flag`}
-                  className="tech-flag w-6 h-4 flex-shrink-0"
-                />
-              )}
+              <FlagImage 
+                src={country?.flag || ''}
+                alt={`${player.nationality} flag`}
+                className="w-6 h-4 flex-shrink-0"
+                nationality={player.nationality}
+              />
               <h3 className="font-bold text-lg text-white truncate">{player.name}</h3>
             </div>
             <div className="text-sm text-muted-foreground">
