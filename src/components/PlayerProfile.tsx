@@ -146,6 +146,9 @@ export const PlayerProfile = ({ player, onBack, recentMatches }: PlayerProfilePr
                     .sort(([,a], [,b]) => (b.wins + b.losses) - (a.wins + a.losses))
                     .map(([opponentId, record]) => {
                       const opponentCountry = COUNTRIES.find(c => c.name === record.opponentNationality);
+                      const totalMatches = record.wins + record.losses;
+                      const winPercentage = totalMatches > 0 ? (record.wins / totalMatches * 100).toFixed(1) : '0.0';
+                      
                       return (
                         <div key={opponentId} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
                           <div className="flex items-center space-x-3 flex-1">
@@ -153,7 +156,7 @@ export const PlayerProfile = ({ player, onBack, recentMatches }: PlayerProfilePr
                               <img 
                                 src={opponentCountry.flag} 
                                 alt={`${record.opponentNationality} flag`}
-                                className="tech-flag w-5 h-3"
+                                className="tech-flag w-6 h-4"
                               />
                             )}
                             <div>
@@ -162,9 +165,17 @@ export const PlayerProfile = ({ player, onBack, recentMatches }: PlayerProfilePr
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="font-mono text-sm text-cyan-400">{record.wins}W-{record.losses}L</div>
+                            <div className="font-mono text-sm text-cyan-400">
+                              {record.wins}W-{record.losses}L
+                            </div>
+                            <div className="font-mono text-xs text-muted-foreground">
+                              {winPercentage}% • {totalMatches} matches
+                            </div>
                             <div className="font-mono text-xs text-muted-foreground">
                               Sets: {record.setsWon}-{record.setsLost}
+                            </div>
+                            <div className="font-mono text-xs text-muted-foreground">
+                              Points: {record.pointsScored}-{record.pointsConceded}
                             </div>
                           </div>
                         </div>

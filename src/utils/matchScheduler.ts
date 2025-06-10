@@ -5,41 +5,54 @@ export const generateDoubleRoundRobinSchedule = (players: Player[], division: 1 
   const matches: Match[] = [];
   const playerList = [...players];
   
-  // First round - each player plays each other once
-  for (let i = 0; i < playerList.length; i++) {
-    for (let j = i + 1; j < playerList.length; j++) {
-      matches.push({
-        id: crypto.randomUUID(),
-        player1: playerList[i],
-        player2: playerList[j],
-        division,
-        matchType: 'league',
-        completed: false,
-        sets: [],
-        setScores: [],
-        season,
-        round: 0 // Will be assigned during scheduling
-      });
-    }
+  if (playerList.length !== 5) {
+    console.warn(`Expected 5 players for division ${division}, got ${playerList.length}`);
+    return matches;
   }
   
-  // Second round - reverse fixtures
-  for (let i = 0; i < playerList.length; i++) {
-    for (let j = i + 1; j < playerList.length; j++) {
-      matches.push({
-        id: crypto.randomUUID(),
-        player1: playerList[j], // Reversed
-        player2: playerList[i],
-        division,
-        matchType: 'league',
-        completed: false,
-        sets: [],
-        setScores: [],
-        season,
-        round: 0 // Will be assigned during scheduling
-      });
-    }
-  }
+  // Standard 10-match double round-robin schedule for 5 players
+  const schedule = [
+    // First round robin
+    [0, 1], // Round 1: Player 1 vs Player 2
+    [2, 3], // Round 2: Player 3 vs Player 4
+    [4, 0], // Round 3: Player 5 vs Player 1
+    [1, 2], // Round 4: Player 2 vs Player 3
+    [3, 4], // Round 5: Player 4 vs Player 5
+    [0, 2], // Round 6: Player 1 vs Player 3
+    [1, 3], // Round 7: Player 2 vs Player 4
+    [4, 1], // Round 8: Player 5 vs Player 2
+    [0, 3], // Round 9: Player 1 vs Player 4
+    [2, 4], // Round 10: Player 3 vs Player 5
+    
+    // Second round robin (reverse fixtures)
+    [1, 0], // Round 11: Player 2 vs Player 1
+    [3, 2], // Round 12: Player 4 vs Player 3
+    [0, 4], // Round 13: Player 1 vs Player 5
+    [2, 1], // Round 14: Player 3 vs Player 2
+    [4, 3], // Round 15: Player 5 vs Player 4
+    [2, 0], // Round 16: Player 3 vs Player 1
+    [3, 1], // Round 17: Player 4 vs Player 2
+    [1, 4], // Round 18: Player 2 vs Player 5
+    [3, 0], // Round 19: Player 4 vs Player 1
+    [4, 2], // Round 20: Player 5 vs Player 3
+  ];
+  
+  schedule.forEach(([p1Index, p2Index], matchIndex) => {
+    const round = Math.floor(matchIndex / 2) + 1; // 2 matches per round
+    
+    matches.push({
+      id: crypto.randomUUID(),
+      player1: playerList[p1Index],
+      player2: playerList[p2Index],
+      division,
+      matchType: 'league',
+      completed: false,
+      sets: [],
+      setScores: [],
+      season,
+      round
+    });
+  });
   
   return matches;
 };
@@ -116,33 +129,26 @@ export const scheduleMatchesByRounds = (
   cupMatches: Match[]
 ): Match[] => {
   const allMatches: Match[] = [];
-  const maxLeagueMatches = Math.max(div1Matches.length, div2Matches.length);
   
-  // Distribute league matches across rounds - NO CUP MATCHES DURING LEAGUE
-  const matchesPerRound = 2; // 2 matches per division per round
-  const totalRounds = Math.ceil(maxLeagueMatches / matchesPerRound);
+  // Group league matches by round
+  const maxRound = Math.max(
+    ...div1Matches.map(m => m.round),
+    ...div2Matches.map(m => m.round)
+  );
   
-  let div1Index = 0;
-  let div2Index = 0;
-  
-  for (let round = 1; round <= totalRounds; round++) {
-    // Add Div 2 matches for this round
-    for (let i = 0; i < matchesPerRound && div2Index < div2Matches.length; i++) {
-      div2Matches[div2Index].round = round;
-      allMatches.push(div2Matches[div2Index]);
-      div2Index++;
-    }
+  // Add league matches round by round
+  for (let round = 1; round <= maxRound; round++) {
+    // Add Division 2 matches first (they get priority in each round)
+    const div2RoundMatches = div2Matches.filter(m => m.round === round);
+    allMatches.push(...div2RoundMatches);
     
-    // Add Div 1 matches for this round
-    for (let i = 0; i < matchesPerRound && div1Index < div1Matches.length; i++) {
-      div1Matches[div1Index].round = round;
-      allMatches.push(div1Matches[div1Index]);
-      div1Index++;
-    }
+    // Then add Division 1 matches
+    const div1RoundMatches = div1Matches.filter(m => m.round === round);
+    allMatches.push(...div1RoundMatches);
   }
   
-  // Add cup matches AFTER all league matches with proper round numbers
-  const cupStartRound = totalRounds + 1;
+  // Add cup matches AFTER all league matches
+  const cupStartRound = maxRound + 1;
   cupMatches.forEach(match => {
     if (match.matchType === 'cup-semi') {
       match.round = cupStartRound;
