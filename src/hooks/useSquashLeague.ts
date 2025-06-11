@@ -171,29 +171,22 @@ export const useSquashLeague = () => {
     
     const match = currentSeason.matches[currentSeason.currentMatchIndex];
     
-    // Create copies of players to avoid direct mutation
-    const player1Copy = { ...match.player1 };
-    const player2Copy = { ...match.player2 };
+    // Find the actual player objects from current state
+    const actualPlayer1 = players.find(p => p.id === match.player1.id);
+    const actualPlayer2 = players.find(p => p.id === match.player2.id);
+    
+    if (!actualPlayer1 || !actualPlayer2) {
+      console.error('Could not find players for match');
+      return;
+    }
     
     const result = simulateMatch(
-      player1Copy, 
-      player2Copy, 
+      actualPlayer1, 
+      actualPlayer2, 
       match.matchType, 
       currentSeason.number, 
       match.round
     );
-    
-    // Update the players state with the modified copies
-    setPlayers(prevPlayers => {
-      return prevPlayers.map(player => {
-        if (player.id === player1Copy.id) {
-          return player1Copy;
-        } else if (player.id === player2Copy.id) {
-          return player2Copy;
-        }
-        return player;
-      });
-    });
     
     // Update league points for league matches
     if (result.matchType === 'league' && result.winner) {
@@ -236,11 +229,20 @@ export const useSquashLeague = () => {
     
     setCurrentSeason(updatedSeason);
     
+    // Update players state with the modified players
+    setPlayers(prevPlayers => {
+      return prevPlayers.map(player => {
+        if (player.id === actualPlayer1.id) return actualPlayer1;
+        if (player.id === actualPlayer2.id) return actualPlayer2;
+        return player;
+      });
+    });
+    
     // Save state after match simulation
     saveGameState({ 
       players: players.map(player => {
-        if (player.id === player1Copy.id) return player1Copy;
-        if (player.id === player2Copy.id) return player2Copy;
+        if (player.id === actualPlayer1.id) return actualPlayer1;
+        if (player.id === actualPlayer2.id) return actualPlayer2;
         return player;
       }), 
       currentSeason: updatedSeason 

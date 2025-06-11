@@ -45,27 +45,22 @@ const generateSetScore = (winnerSkill: number, loserSkill: number): { winner: nu
 };
 
 export const simulateMatch = (player1: Player, player2: Player, matchType: string = 'league', season: number, round: number): Match => {
-  // Create deep copies to avoid mutation issues
-  const player1Copy = JSON.parse(JSON.stringify(player1));
-  const player2Copy = JSON.parse(JSON.stringify(player2));
-  
   // Add small random fluctuation to simulate form
   const fluctuation1 = (Math.random() - 0.5) * 8; // ±4 points
   const fluctuation2 = (Math.random() - 0.5) * 8;
   
-  const adjustedRating1 = Math.max(1, player1Copy.rating + fluctuation1);
-  const adjustedRating2 = Math.max(1, player2Copy.rating + fluctuation2);
+  const adjustedRating1 = Math.max(1, player1.rating + fluctuation1);
+  const adjustedRating2 = Math.max(1, player2.rating + fluctuation2);
   
   const sets: number[] = [];
   const setScores: Array<{player1: number, player2: number}> = [];
   let player1Sets = 0;
   let player2Sets = 0;
   
-  // Simulate best of 3 or best of 5 sets (randomly choose format)
-  const maxSets = Math.random() > 0.7 ? 3 : 2; // 30% chance of best of 5, 70% best of 3
-  const setsToWin = maxSets;
+  // Best of 3 format - first to win 2 sets wins
+  const setsToWin = 2;
   
-  // Simulate sets
+  // Simulate sets until someone wins 2
   while (player1Sets < setsToWin && player2Sets < setsToWin) {
     const winProbability = calculateWinProbability(adjustedRating1, adjustedRating2);
     const setWinner = Math.random() < winProbability ? 1 : 2;
@@ -83,22 +78,22 @@ export const simulateMatch = (player1: Player, player2: Player, matchType: strin
     }
   }
   
-  const winner = player1Sets > player2Sets ? player1Copy : player2Copy;
-  const loser = winner.id === player1Copy.id ? player2Copy : player1Copy;
-  const winnerSets = winner.id === player1Copy.id ? player1Sets : player2Sets;
-  const loserSets = winner.id === player1Copy.id ? player2Sets : player1Sets;
+  const winner = player1Sets > player2Sets ? player1 : player2;
+  const loser = winner.id === player1.id ? player2 : player1;
+  const winnerSets = winner.id === player1.id ? player1Sets : player2Sets;
+  const loserSets = winner.id === player1.id ? player2Sets : player1Sets;
   
   // Calculate total points from set scores
   const player1Points = setScores.reduce((sum, set) => sum + set.player1, 0);
   const player2Points = setScores.reduce((sum, set) => sum + set.player2, 0);
   
   // Update match stats
-  updatePlayerStats(player1Copy, player2Copy, winner, winnerSets, loserSets, player1Points, player2Points);
+  updatePlayerStats(player1, player2, winner, winnerSets, loserSets, player1Points, player2Points);
   
   return {
     id: crypto.randomUUID(),
-    player1: player1Copy,
-    player2: player2Copy,
+    player1,
+    player2,
     division: player1.division,
     matchType: matchType as any,
     winner,
@@ -123,7 +118,7 @@ const updatePlayerStats = (
   player1.gamesPlayed++;
   player2.gamesPlayed++;
   
-  if (winner === player1) {
+  if (winner.id === player1.id) {
     player1.gamesWon++;
     player2.gamesLost++;
   } else {
@@ -132,10 +127,17 @@ const updatePlayerStats = (
   }
   
   // Update sets won/lost
-  player1.setsWon += winner === player1 ? winnerSets : loserSets;
-  player1.setsLost += winner === player1 ? loserSets : winnerSets;
-  player2.setsWon += winner === player2 ? winnerSets : loserSets;
-  player2.setsLost += winner === player2 ? loserSets : winnerSets;
+  if (winner.id === player1.id) {
+    player1.setsWon += winnerSets;
+    player1.setsLost += loserSets;
+    player2.setsWon += loserSets;
+    player2.setsLost += winnerSets;
+  } else {
+    player1.setsWon += loserSets;
+    player1.setsLost += winnerSets;
+    player2.setsWon += winnerSets;
+    player2.setsLost += loserSets;
+  }
   
   // Update points scored/conceded
   player1.pointsScored += player1Points;
@@ -187,7 +189,7 @@ const updateHeadToHead = (
   const h2h1 = player1.headToHead[player2.id];
   const h2h2 = player2.headToHead[player1.id];
   
-  if (winner === player1) {
+  if (winner.id === player1.id) {
     h2h1.wins++;
     h2h2.losses++;
     h2h1.setsWon += winnerSets;
