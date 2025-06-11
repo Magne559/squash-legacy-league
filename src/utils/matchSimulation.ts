@@ -1,10 +1,9 @@
-
 import { Player, Match, HeadToHeadRecord } from "@/types/squash";
 
 // Logistic function for win probability based on rating difference
 const calculateWinProbability = (ratingA: number, ratingB: number): number => {
   const skillDiff = ratingA - ratingB;
-  return 1 / (1 + Math.pow(10, -skillDiff / 10));
+  return 1 / (1 + Math.pow(10, -skillDiff / 400)); // Adjusted divisor for more realistic probabilities
 };
 
 // Generate realistic set scores based on skill difference
@@ -12,34 +11,62 @@ const generateSetScore = (winnerSkill: number, loserSkill: number): { winner: nu
   const skillGap = Math.abs(winnerSkill - loserSkill);
   const baseWinnerScore = 11;
   
-  // Closer match = higher loser score
+  // More varied scoring based on skill difference
   let loserScore: number;
-  if (skillGap < 10) {
-    loserScore = Math.floor(Math.random() * 4) + 8; // 8-11 (close match)
-  } else if (skillGap < 25) {
-    loserScore = Math.floor(Math.random() * 5) + 5; // 5-9 (moderate gap)
+  const randomFactor = Math.random();
+  
+  if (skillGap < 5) {
+    // Very close match - can be tight
+    loserScore = Math.floor(randomFactor * 4) + 7; // 7-10 (very close)
+    if (randomFactor > 0.85) loserScore = 11; // Occasional deuce games
+  } else if (skillGap < 15) {
+    // Close match
+    loserScore = Math.floor(randomFactor * 5) + 6; // 6-10 (close match)
+    if (randomFactor > 0.9) loserScore = 11; // Rare deuce games
+  } else if (skillGap < 30) {
+    // Moderate gap
+    loserScore = Math.floor(randomFactor * 6) + 4; // 4-9 (moderate gap)
   } else {
-    loserScore = Math.floor(Math.random() * 6) + 2; // 2-7 (large gap)
+    // Large gap
+    loserScore = Math.floor(randomFactor * 8) + 1; // 1-8 (large gap)
+  }
+  
+  // Handle deuce games (11-11, then someone wins by 2)
+  if (loserScore >= 11) {
+    const deuceProbability = calculateWinProbability(winnerSkill, loserSkill);
+    if (Math.random() < deuceProbability) {
+      return { winner: Math.floor(Math.random() * 3) + 12, loser: Math.floor(Math.random() * 3) + 10 }; // 12-15 vs 10-13
+    } else {
+      return { winner: Math.floor(Math.random() * 3) + 10, loser: Math.floor(Math.random() * 3) + 12 }; // Upset win
+    }
   }
   
   return { winner: baseWinnerScore, loser: Math.min(loserScore, 10) };
 };
 
 export const simulateMatch = (player1: Player, player2: Player, matchType: string = 'league', season: number, round: number): Match => {
-  // Add small random fluctuation to simulate form
-  const fluctuation1 = (Math.random() - 0.5) * 6; // ±3 points
-  const fluctuation2 = (Math.random() - 0.5) * 6;
+  // Create deep copies to avoid mutation issues
+  const player1Copy = JSON.parse(JSON.stringify(player1));
+  const player2Copy = JSON.parse(JSON.stringify(player2));
   
-  const adjustedRating1 = Math.max(1, player1.rating + fluctuation1);
-  const adjustedRating2 = Math.max(1, player2.rating + fluctuation2);
+  // Add small random fluctuation to simulate form
+  const fluctuation1 = (Math.random() - 0.5) * 8; // ±4 points
+  const fluctuation2 = (Math.random() - 0.5) * 8;
+  
+  const adjustedRating1 = Math.max(1, player1Copy.rating + fluctuation1);
+  const adjustedRating2 = Math.max(1, player2Copy.rating + fluctuation2);
   
   const sets: number[] = [];
   const setScores: Array<{player1: number, player2: number}> = [];
   let player1Sets = 0;
   let player2Sets = 0;
   
-  // Simulate best of 3 sets
-  while (player1Sets < 2 && player2Sets < 2) {
+  // Simulate best of 3 or best of 5 sets (randomly choose format)
+  const maxSets = Math.random() > 0.7 ? 3 : 2; // 30% chance of best of 5, 70% best of 3
+  const setsToWin = maxSets;
+  
+  // Simulate sets
+  while (player1Sets < setsToWin && player2Sets < setsToWin) {
     const winProbability = calculateWinProbability(adjustedRating1, adjustedRating2);
     const setWinner = Math.random() < winProbability ? 1 : 2;
     
@@ -56,22 +83,22 @@ export const simulateMatch = (player1: Player, player2: Player, matchType: strin
     }
   }
   
-  const winner = player1Sets === 2 ? player1 : player2;
-  const loser = winner === player1 ? player2 : player1;
-  const winnerSets = winner === player1 ? player1Sets : player2Sets;
-  const loserSets = winner === player1 ? player2Sets : player1Sets;
+  const winner = player1Sets > player2Sets ? player1Copy : player2Copy;
+  const loser = winner.id === player1Copy.id ? player2Copy : player1Copy;
+  const winnerSets = winner.id === player1Copy.id ? player1Sets : player2Sets;
+  const loserSets = winner.id === player1Copy.id ? player2Sets : player1Sets;
   
   // Calculate total points from set scores
   const player1Points = setScores.reduce((sum, set) => sum + set.player1, 0);
   const player2Points = setScores.reduce((sum, set) => sum + set.player2, 0);
   
   // Update match stats
-  updatePlayerStats(player1, player2, winner, winnerSets, loserSets, player1Points, player2Points);
+  updatePlayerStats(player1Copy, player2Copy, winner, winnerSets, loserSets, player1Points, player2Points);
   
   return {
     id: crypto.randomUUID(),
-    player1,
-    player2,
+    player1: player1Copy,
+    player2: player2Copy,
     division: player1.division,
     matchType: matchType as any,
     winner,

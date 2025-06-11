@@ -259,20 +259,23 @@ export const useSquashLeague = () => {
     const div1Players = players.filter(p => p.division === 1);
     const div2Players = players.filter(p => p.division === 2);
     
+    // Use the same ranking logic as in StandingsView
     const div1Standings = div1Players.sort((a, b) => {
-      const aPoints = currentSeason.leaguePoints[a.id] || 0;
-      const bPoints = currentSeason.leaguePoints[b.id] || 0;
-      if (aPoints !== bPoints) return bPoints - aPoints;
+      // Primary: Games won
+      if (a.gamesWon !== b.gamesWon) return b.gamesWon - a.gamesWon;
       
-      // Tie-breaker 1: Set difference
+      // Tie-breaker 1: Games played (fewer is better if same wins)
+      if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
+      
+      // Tie-breaker 2: Set difference
       const aSetDiff = a.setsWon - a.setsLost;
       const bSetDiff = b.setsWon - b.setsLost;
       if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
       
-      // Tie-breaker 2: Total points scored
+      // Tie-breaker 3: Total points scored
       if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
       
-      // Tie-breaker 3: Head to head
+      // Tie-breaker 4: Head to head
       const headToHead = a.headToHead[b.id];
       if (headToHead) {
         return headToHead.wins - headToHead.losses;
@@ -282,11 +285,10 @@ export const useSquashLeague = () => {
     });
     
     const div2Standings = div2Players.sort((a, b) => {
-      const aPoints = currentSeason.leaguePoints[a.id] || 0;
-      const bPoints = currentSeason.leaguePoints[b.id] || 0;
-      if (aPoints !== bPoints) return bPoints - aPoints;
+      // Same ranking logic
+      if (a.gamesWon !== b.gamesWon) return b.gamesWon - a.gamesWon;
+      if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
       
-      // Apply same tie-breakers
       const aSetDiff = a.setsWon - a.setsLost;
       const bSetDiff = b.setsWon - b.setsLost;
       if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;

@@ -28,20 +28,23 @@ export const StandingsView = ({
     return divisionPlayers.sort((a, b) => {
       if (!currentSeason) return 0;
       
-      // Primary: League points (wins)
-      const aPoints = currentSeason.leaguePoints[a.id] || 0;
-      const bPoints = currentSeason.leaguePoints[b.id] || 0;
-      if (aPoints !== bPoints) return bPoints - aPoints;
+      // Primary: Games won (not league points)
+      const aWins = a.gamesWon;
+      const bWins = b.gamesWon;
+      if (aWins !== bWins) return bWins - aWins;
       
-      // Tie-breaker 1: Set difference
+      // Tie-breaker 1: Games played (fewer is better if same wins)
+      if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
+      
+      // Tie-breaker 2: Set difference
       const aSetDiff = a.setsWon - a.setsLost;
       const bSetDiff = b.setsWon - b.setsLost;
       if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
       
-      // Tie-breaker 2: Total points scored
+      // Tie-breaker 3: Total points scored
       if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
       
-      // Tie-breaker 3: Head to head
+      // Tie-breaker 4: Head to head
       const headToHead = a.headToHead[b.id];
       if (headToHead) {
         return headToHead.wins - headToHead.losses;
@@ -85,7 +88,7 @@ export const StandingsView = ({
                         <Info className="w-4 h-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head</p>
+                        <p>Ranked by: 1) Games won 2) Games played 3) Set difference 4) Points scored 5) Head-to-head</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -96,7 +99,7 @@ export const StandingsView = ({
             <CardContent>
               <div className="space-y-2">
                 {div1Standings.map((player, index) => (
-                  <div key={player.id} className="relative pr-16">
+                  <div key={player.id} className="relative pr-20">
                     <PlayerCard 
                       player={player} 
                       position={index + 1}
@@ -133,7 +136,7 @@ export const StandingsView = ({
                         <Info className="w-4 h-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Tie-breakers: 1) Set difference 2) Points scored 3) Head-to-head</p>
+                        <p>Ranked by: 1) Games won 2) Games played 3) Set difference 4) Points scored 5) Head-to-head</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -144,7 +147,7 @@ export const StandingsView = ({
             <CardContent>
               <div className="space-y-2">
                 {div2Standings.map((player, index) => (
-                  <div key={player.id} className="relative pr-16">
+                  <div key={player.id} className="relative pr-20">
                     <PlayerCard 
                       player={player} 
                       position={index + 6}
