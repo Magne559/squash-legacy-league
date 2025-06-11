@@ -6,6 +6,7 @@ import { useNavigationState } from "@/hooks/useNavigationState";
 import { StandingsView } from "@/components/StandingsView";
 import { MatchCenter } from "@/components/MatchCenter";
 import { PlayerProfile } from "@/components/PlayerProfile";
+import { RetirementPopup } from "@/components/RetirementPopup";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +21,11 @@ const Index = () => {
     simulateNextMatch,
     simulateCupMatch,
     endSeason,
-    resetLeague
+    resetLeague,
+    showRetirementPopup,
+    pendingRetirements,
+    pendingNewPlayers,
+    onStartNextSeason
   } = useSquashLeague();
 
   const handleResetLeague = () => {
@@ -155,6 +160,13 @@ const Index = () => {
           </div>
         </TabsContent>
       </Tabs>
+
+      <RetirementPopup
+        isOpen={showRetirementPopup}
+        retiringPlayers={pendingRetirements}
+        newPlayers={pendingNewPlayers}
+        onStartNextSeason={onStartNextSeason}
+      />
     </div>
   );
 };

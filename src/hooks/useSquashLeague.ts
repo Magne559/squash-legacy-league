@@ -20,6 +20,10 @@ export const useSquashLeague = () => {
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [seasonArchive, setSeasonArchive] = useState<SeasonArchive[]>([]);
   const [retiredPlayers, setRetiredPlayers] = useState<Player[]>([]);
+  const [showRetirementPopup, setShowRetirementPopup] = useState(false);
+  const [pendingRetirements, setPendingRetirements] = useState<Player[]>([]);
+  const [pendingNewPlayers, setPendingNewPlayers] = useState<Player[]>([]);
+  const [nextSeasonNumber, setNextSeasonNumber] = useState(1);
 
   // Save game state to localStorage
   const saveGameState = (state: Partial<GameState>) => {
@@ -91,9 +95,23 @@ export const useSquashLeague = () => {
   }, []);
 
   const startNewSeason = (currentPlayers: Player[], seasonNumber: number) => {
+    console.log(`Starting season ${seasonNumber} with ${currentPlayers.length} players`);
+    
+    // Ensure we have exactly 10 players (5 per division)
+    if (currentPlayers.length !== 10) {
+      console.error(`Expected 10 players, got ${currentPlayers.length}`);
+      return;
+    }
+    
     // Initialize league
     const div1Players = currentPlayers.filter(p => p.division === 1);
     const div2Players = currentPlayers.filter(p => p.division === 2);
+    
+    // Ensure 5 players per division
+    if (div1Players.length !== 5 || div2Players.length !== 5) {
+      console.error(`Division sizes incorrect: Div1=${div1Players.length}, Div2=${div2Players.length}`);
+      return;
+    }
     
     // Generate league matches (double round-robin)
     const div1Matches = generateDoubleRoundRobinSchedule(div1Players, 1, seasonNumber);
@@ -287,15 +305,6 @@ export const useSquashLeague = () => {
       return b.rating - a.rating;
     });
     
-    // Handle promotion/relegation
-    if (div1Standings.length > 0 && div2Standings.length > 0) {
-      const relegated = div1Standings[4]; // Last in Div 1
-      const promoted = div2Standings[0]; // First in Div 2
-      
-      relegated.division = 2;
-      promoted.division = 1;
-    }
-    
     // Update player careers and development
     const updatedPlayers = players.map(player => {
       player.seasonsPlayed++;
@@ -393,8 +402,49 @@ export const useSquashLeague = () => {
       newPlayers.push(generatePlayer(2)); // New players start in Div 2
     }
     
-    const finalPlayers = [...activeUpdatedPlayers, ...newPlayers];
-    setPlayers(finalPlayers);
+    // Handle promotion/relegation with proper division balancing
+    let finalPlayers = [...activeUpdatedPlayers, ...newPlayers];
+    
+    // Ensure we have exactly 10 players
+    while (finalPlayers.length < 10) {
+      finalPlayers.push(generatePlayer(2));
+    }
+    if (finalPlayers.length > 10) {
+      finalPlayers = finalPlayers.slice(0, 10);
+    }
+    
+    // Balance divisions to have exactly 5 players each
+    const currentDiv1 = finalPlayers.filter(p => p.division === 1);
+    const currentDiv2 = finalPlayers.filter(p => p.division === 2);
+    
+    // Adjust divisions to ensure 5 players each
+    if (currentDiv1.length > 5) {
+      // Too many in Div 1, move excess to Div 2
+      const excess = currentDiv1.length - 5;
+      const sortedDiv1 = currentDiv1.sort((a, b) => a.gamesWon - b.gamesWon); // Worst performers first
+      for (let i = 0; i < excess; i++) {
+        sortedDiv1[i].division = 2;
+      }
+    } else if (currentDiv1.length < 5) {
+      // Too few in Div 1, promote from Div 2
+      const needed = 5 - currentDiv1.length;
+      const sortedDiv2 = currentDiv2.sort((a, b) => b.gamesWon - a.gamesWon); // Best performers first
+      for (let i = 0; i < needed && i < sortedDiv2.length; i++) {
+        sortedDiv2[i].division = 1;
+      }
+    }
+    
+    // Final check and rebalance if needed
+    const finalDiv1 = finalPlayers.filter(p => p.division === 1);
+    const finalDiv2 = finalPlayers.filter(p => p.division === 2);
+    
+    if (finalDiv1.length !== 5 || finalDiv2.length !== 5) {
+      // Force balance - assign first 5 to Div 1, rest to Div 2
+      finalPlayers.sort((a, b) => b.rating - a.rating);
+      finalPlayers.forEach((player, index) => {
+        player.division = index < 5 ? 1 : 2;
+      });
+    }
     
     // Mark season as completed
     const completedSeason = {
@@ -411,10 +461,27 @@ export const useSquashLeague = () => {
       retiredPlayers: updatedRetiredPlayers
     });
     
-    // Start new season
+    // Show retirement popup if there are retirements
+    if (newRetired.length > 0) {
+      setPendingRetirements(newRetired);
+      setPendingNewPlayers(newPlayers);
+      setNextSeasonNumber(currentSeason.number + 1);
+      setShowRetirementPopup(true);
+      setPlayers(finalPlayers); // Update players state
+    } else {
+      // No retirements, start next season immediately
+      setPlayers(finalPlayers);
+      setTimeout(() => {
+        startNewSeason(finalPlayers, currentSeason.number + 1);
+      }, 1000);
+    }
+  };
+
+  const handleStartNextSeason = () => {
+    setShowRetirementPopup(false);
     setTimeout(() => {
-      startNewSeason(finalPlayers, currentSeason.number + 1);
-    }, 1000);
+      startNewSeason(players, nextSeasonNumber);
+    }, 500);
   };
 
   return {
@@ -426,6 +493,10 @@ export const useSquashLeague = () => {
     simulateNextMatch,
     simulateCupMatch,
     endSeason,
-    resetLeague
+    resetLeague,
+    showRetirementPopup,
+    pendingRetirements,
+    pendingNewPlayers,
+    onStartNextSeason: handleStartNextSeason
   };
 };
