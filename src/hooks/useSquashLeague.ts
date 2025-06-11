@@ -108,24 +108,11 @@ export const useSquashLeague = () => {
       const topFour = lastSeason.division1FinalStandings.slice(0, 4);
       cupMatches = generateCupMatches(topFour, seasonNumber);
       cupParticipants = topFour;
-      
-      // Mark cup participants as having played in cup
-      topFour.forEach(player => {
-        const currentPlayer = currentPlayers.find(p => p.id === player.id);
-        if (currentPlayer && !currentPlayer.isRetired) {
-          currentPlayer.cupsPlayed++;
-        }
-      });
     } else if (seasonNumber === 1) {
       // For first season, use current top 4 by rating
       const topFour = div1Players.sort((a, b) => b.rating - a.rating).slice(0, 4);
       cupMatches = generateCupMatches(topFour, seasonNumber);
       cupParticipants = topFour;
-      
-      // Mark cup participants
-      topFour.forEach(player => {
-        player.cupsPlayed++;
-      });
     }
     
     // Schedule all matches with league first, then cup
@@ -321,10 +308,13 @@ export const useSquashLeague = () => {
         ? div1Standings.indexOf(player) + 1
         : div2Standings.indexOf(player) + 6; // Div 2 positions are 6-10
       
-      // Determine cup result
+      // Determine cup result and increment cupsPlayed if participated
       let cupResult: 'Champion' | 'Runner-Up' | '3rd Place' | 'Semifinalist' | 'Did Not Qualify' = 'Did Not Qualify';
       
       if (currentSeason.cupParticipants.some(p => p.id === player.id)) {
+        // Increment cupsPlayed since they participated in this season's cup
+        player.cupsPlayed++;
+        
         const cupFinal = currentSeason.matches.find(m => m.matchType === 'cup-final' && m.completed);
         const cup3rd = currentSeason.matches.find(m => m.matchType === 'cup-3rd' && m.completed);
         const cupSemis = currentSeason.matches.filter(m => m.matchType === 'cup-semi' && m.completed);
