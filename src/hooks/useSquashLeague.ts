@@ -176,12 +176,21 @@ export const useSquashLeague = () => {
     
     const match = currentSeason.matches[currentSeason.currentMatchIndex];
     
-    // Find the actual player objects from current state
-    const actualPlayer1 = players.find(p => p.id === match.player1.id);
-    const actualPlayer2 = players.find(p => p.id === match.player2.id);
+    // Find the actual player objects from current state by matching names and nationality
+    // This handles cases where player object references become stale after retirements
+    const actualPlayer1 = players.find(p => 
+      p.name === match.player1.name && p.nationality === match.player1.nationality
+    );
+    const actualPlayer2 = players.find(p => 
+      p.name === match.player2.name && p.nationality === match.player2.nationality
+    );
     
     if (!actualPlayer1 || !actualPlayer2) {
-      console.error('Could not find players for match');
+      console.error('Could not find players for match:', {
+        match_player1: match.player1.name,
+        match_player2: match.player2.name,
+        available_players: players.map(p => p.name)
+      });
       return;
     }
     
