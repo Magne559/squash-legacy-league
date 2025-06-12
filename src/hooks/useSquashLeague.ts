@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Player, Season, Match, SeasonArchive } from '@/types/squash';
 import { generateInitialPlayers, generatePlayer } from '@/utils/playerGenerator';
@@ -103,35 +104,66 @@ export const useSquashLeague = () => {
       return;
     }
     
-    // Initialize league
-    const div1Players = currentPlayers.filter(p => p.division === 1);
-    const div2Players = currentPlayers.filter(p => p.division === 2);
+    // Sort players by rating and assign divisions properly
+    const sortedPlayers = [...currentPlayers].sort((a, b) => b.rating - a.rating);
     
-    // Ensure 5 players per division
-    if (div1Players.length !== 5 || div2Players.length !== 5) {
-      console.error(`Division sizes incorrect: Div1=${div1Players.length}, Div2=${div2Players.length}`);
-      return;
-    }
+    // Top 5 go to Division 1, bottom 5 go to Division 2
+    sortedPlayers.forEach((player, index) => {
+      player.division = index < 5 ? 1 : 2;
+    });
+    
+    const div1Players = sortedPlayers.slice(0, 5);
+    const div2Players = sortedPlayers.slice(5, 10);
+    
+    console.log('Division assignments:', {
+      div1: div1Players.map(p => p.name),
+      div2: div2Players.map(p => p.name)
+    });
     
     // Generate league matches (double round-robin)
     const div1Matches = generateDoubleRoundRobinSchedule(div1Players, 1, seasonNumber);
     const div2Matches = generateDoubleRoundRobinSchedule(div2Players, 2, seasonNumber);
     
-    // Generate cup matches (top 4 from current Div 1) - to be played AFTER league
+    // Generate cup matches - get top 4 from previous season or current div 1
     let cupMatches: Match[] = [];
     let cupParticipants: Player[] = [];
     
-    if (seasonNumber > 1 && seasonArchive.length > 0) {
+    if (seasonArchive.length > 0) {
+      // Get the final standings from the last season
       const lastSeason = seasonArchive[seasonArchive.length - 1];
-      const topFour = lastSeason.division1FinalStandings.slice(0, 4);
-      cupMatches = generateCupMatches(topFour, seasonNumber);
-      cupParticipants = topFour;
-    } else if (seasonNumber === 1) {
-      // For first season, use current top 4 by rating
-      const topFour = div1Players.sort((a, b) => b.rating - a.rating).slice(0, 4);
-      cupMatches = generateCupMatches(topFour, seasonNumber);
-      cupParticipants = topFour;
+      const lastSeasonTopPlayers = lastSeason.division1FinalStandings.slice(0, 4);
+      
+      // Find these players in current active players (handle retirements)
+      const activeCupParticipants: Player[] = [];
+      const activePlayerMap = new Map(currentPlayers.map(p => [p.name + p.nationality, p]));
+      
+      // Try to find the top 4 from last season among current players
+      for (const lastSeasonPlayer of lastSeasonTopPlayers) {
+        const currentPlayer = activePlayerMap.get(lastSeasonPlayer.name + lastSeasonPlayer.nationality);
+        if (currentPlayer) {
+          activeCupParticipants.push(currentPlayer);
+        }
+      }
+      
+      // If we have fewer than 4 due to retirements, fill with current top Division 1 players
+      if (activeCupParticipants.length < 4) {
+        const additionalPlayers = div1Players
+          .filter(p => !activeCupParticipants.some(cp => cp.id === p.id))
+          .slice(0, 4 - activeCupParticipants.length);
+        activeCupParticipants.push(...additionalPlayers);
+      }
+      
+      cupParticipants = activeCupParticipants.slice(0, 4);
+      if (cupParticipants.length === 4) {
+        cupMatches = generateCupMatches(cupParticipants, seasonNumber);
+      }
+    } else {
+      // First season - use current top 4 by rating
+      cupParticipants = div1Players.slice(0, 4);
+      cupMatches = generateCupMatches(cupParticipants, seasonNumber);
     }
+    
+    console.log('Cup participants:', cupParticipants.map(p => p.name));
     
     // Schedule all matches with league first, then cup
     const allMatches = scheduleMatchesByRounds(div1Matches, div2Matches, cupMatches);
@@ -271,48 +303,39 @@ export const useSquashLeague = () => {
   const endSeason = () => {
     if (!currentSeason) return;
     
-    // Calculate final standings
+    // Calculate final standings using PROPER ranking logic
     const div1Players = players.filter(p => p.division === 1);
     const div2Players = players.filter(p => p.division === 2);
     
-    // Use the same ranking logic as in StandingsView
-    const div1Standings = div1Players.sort((a, b) => {
-      // Primary: Games won
-      if (a.gamesWon !== b.gamesWon) return b.gamesWon - a.gamesWon;
-      
-      // Tie-breaker 1: Games played (fewer is better if same wins)
-      if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
-      
-      // Tie-breaker 2: Set difference
-      const aSetDiff = a.setsWon - a.setsLost;
-      const bSetDiff = b.setsWon - b.setsLost;
-      if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
-      
-      // Tie-breaker 3: Total points scored
-      if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
-      
-      // Tie-breaker 4: Head to head
-      const headToHead = a.headToHead[b.id];
-      if (headToHead) {
-        return headToHead.wins - headToHead.losses;
-      }
-      
-      return b.rating - a.rating;
-    });
+    // FIXED: Use games won as PRIMARY sorting criteria
+    const getStandings = (divisionPlayers: Player[]) => {
+      return divisionPlayers.sort((a, b) => {
+        // PRIMARY: Games won (most important)
+        if (a.gamesWon !== b.gamesWon) return b.gamesWon - a.gamesWon;
+        
+        // Tie-breaker 1: Games played (fewer is better if same wins)
+        if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
+        
+        // Tie-breaker 2: Set difference
+        const aSetDiff = a.setsWon - a.setsLost;
+        const bSetDiff = b.setsWon - b.setsLost;
+        if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
+        
+        // Tie-breaker 3: Total points scored
+        if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
+        
+        // Tie-breaker 4: Head to head
+        const headToHead = a.headToHead[b.id];
+        if (headToHead) {
+          return headToHead.wins - headToHead.losses;
+        }
+        
+        return b.rating - a.rating;
+      });
+    };
     
-    const div2Standings = div2Players.sort((a, b) => {
-      // Same ranking logic
-      if (a.gamesWon !== b.gamesWon) return b.gamesWon - a.gamesWon;
-      if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
-      
-      const aSetDiff = a.setsWon - a.setsLost;
-      const bSetDiff = b.setsWon - b.setsLost;
-      if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
-      
-      if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
-      
-      return b.rating - a.rating;
-    });
+    const div1Standings = getStandings(div1Players);
+    const div2Standings = getStandings(div2Players);
     
     // Update player careers and development
     const updatedPlayers = players.map(player => {
@@ -366,9 +389,10 @@ export const useSquashLeague = () => {
         player.podiums++;
       }
       
-      // Check for retirement
-      if (player.seasonsPlayed >= player.careerLength || player.rating < 15) {
+      // FIXED: Check for retirement with proper career length validation
+      if (player.seasonsPlayed >= player.careerLength) {
         player.isRetired = true;
+        console.log(`${player.name} retiring after ${player.seasonsPlayed} seasons (career length: ${player.careerLength})`);
       }
       
       return player;
@@ -405,13 +429,13 @@ export const useSquashLeague = () => {
     const updatedRetiredPlayers = [...retiredPlayers, ...newRetired];
     setRetiredPlayers(updatedRetiredPlayers);
     
-    // Generate new players for retirees
+    // Generate new players for retirees (all start in Division 2)
     const newPlayers: Player[] = [];
     for (let i = 0; i < newRetired.length; i++) {
-      newPlayers.push(generatePlayer(2)); // New players start in Div 2
+      newPlayers.push(generatePlayer(2));
     }
     
-    // Handle promotion/relegation with proper division balancing
+    // Combine active players and new players
     let finalPlayers = [...activeUpdatedPlayers, ...newPlayers];
     
     // Ensure we have exactly 10 players
@@ -422,38 +446,11 @@ export const useSquashLeague = () => {
       finalPlayers = finalPlayers.slice(0, 10);
     }
     
-    // Balance divisions to have exactly 5 players each
-    const currentDiv1 = finalPlayers.filter(p => p.division === 1);
-    const currentDiv2 = finalPlayers.filter(p => p.division === 2);
-    
-    // Adjust divisions to ensure 5 players each
-    if (currentDiv1.length > 5) {
-      // Too many in Div 1, move excess to Div 2
-      const excess = currentDiv1.length - 5;
-      const sortedDiv1 = currentDiv1.sort((a, b) => a.gamesWon - b.gamesWon); // Worst performers first
-      for (let i = 0; i < excess; i++) {
-        sortedDiv1[i].division = 2;
-      }
-    } else if (currentDiv1.length < 5) {
-      // Too few in Div 1, promote from Div 2
-      const needed = 5 - currentDiv1.length;
-      const sortedDiv2 = currentDiv2.sort((a, b) => b.gamesWon - a.gamesWon); // Best performers first
-      for (let i = 0; i < needed && i < sortedDiv2.length; i++) {
-        sortedDiv2[i].division = 1;
-      }
-    }
-    
-    // Final check and rebalance if needed
-    const finalDiv1 = finalPlayers.filter(p => p.division === 1);
-    const finalDiv2 = finalPlayers.filter(p => p.division === 2);
-    
-    if (finalDiv1.length !== 5 || finalDiv2.length !== 5) {
-      // Force balance - assign first 5 to Div 1, rest to Div 2
-      finalPlayers.sort((a, b) => b.rating - a.rating);
-      finalPlayers.forEach((player, index) => {
-        player.division = index < 5 ? 1 : 2;
-      });
-    }
+    console.log(`Season ${currentSeason.number} ended:`, {
+      retired: newRetired.map(p => p.name),
+      newPlayers: newPlayers.map(p => p.name),
+      totalPlayers: finalPlayers.length
+    });
     
     // Mark season as completed
     const completedSeason = {

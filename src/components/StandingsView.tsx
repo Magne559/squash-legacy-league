@@ -28,10 +28,8 @@ export const StandingsView = ({
     return divisionPlayers.sort((a, b) => {
       if (!currentSeason) return 0;
       
-      // Primary: Games won (not league points)
-      const aWins = a.gamesWon;
-      const bWins = b.gamesWon;
-      if (aWins !== bWins) return bWins - aWins;
+      // PRIMARY: Games won (MOST IMPORTANT)
+      if (a.gamesWon !== b.gamesWon) return b.gamesWon - a.gamesWon;
       
       // Tie-breaker 1: Games played (fewer is better if same wins)
       if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;

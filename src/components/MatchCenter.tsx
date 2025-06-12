@@ -1,9 +1,10 @@
+
 import { useState } from "react";
 import { Season, Match } from "@/types/squash";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Trophy, Calendar, BarChart3 } from "lucide-react";
+import { Play, Calendar, BarChart3 } from "lucide-react";
 import { RecentResults } from "./RecentResults";
 import { COUNTRIES } from "@/utils/countries";
 import { FlagImage } from "./FlagImage";
@@ -82,7 +83,7 @@ export const MatchCenter = ({
   return (
     <div className="p-4 space-y-4">
       <Tabs value={selectedTab} onValueChange={setSelectedTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-card/50 backdrop-blur-sm border-cyan-400/20">
+        <TabsList className="grid w-full grid-cols-3 bg-card/50 backdrop-blur-sm border-cyan-400/20">
           <TabsTrigger value="upcoming" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
             <Calendar className="w-4 h-4 mr-2" />
             Schedule
@@ -94,10 +95,6 @@ export const MatchCenter = ({
           <TabsTrigger value="results" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
             <BarChart3 className="w-4 h-4 mr-2" />
             Results
-          </TabsTrigger>
-          <TabsTrigger value="cup" className="data-[state=active]:bg-cyan-500/20 data-[state=active]:text-cyan-400">
-            <Trophy className="w-4 h-4 mr-2" />
-            Cup
           </TabsTrigger>
         </TabsList>
 
@@ -318,149 +315,6 @@ export const MatchCenter = ({
             title="📊 Season Results"
             maxResults={15}
           />
-        </TabsContent>
-
-        <TabsContent value="cup" className="mt-4">
-          <Card className="tech-card border-cyan-400/30">
-            <CardHeader>
-              <CardTitle className="text-cyan-400">
-                Season {currentSeason.number} - {leaguePhaseComplete ? 'Cup Phase' : 'League Phase'}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 gap-4 mb-4">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-cyan-400">{completedLeague}/{totalLeague}</div>
-                  <div className="text-sm text-muted-foreground">League Matches</div>
-                  {leaguePhaseComplete && (
-                    <div className="text-xs text-green-400 mt-1">✓ Complete</div>
-                  )}
-                </div>
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-cyan-400">{completedCup}/{totalCup || 0}</div>
-                  <div className="text-sm text-muted-foreground">Cup Matches</div>
-                  {!leaguePhaseComplete && (
-                    <div className="text-xs text-muted-foreground mt-1">Awaiting league</div>
-                  )}
-                </div>
-              </div>
-
-              {nextMatch && (
-                <Card className="mb-4 bg-card/70 border-cyan-400/40">
-                  <CardContent className="p-4">
-                    <div className="text-center mb-3">
-                      <div className="text-sm text-muted-foreground mb-2">
-                        {nextMatch.matchType === 'league' ? (
-                          `Division ${nextMatch.division} League - Round ${nextMatch.round}`
-                        ) : nextMatch.matchType === 'cup-semi' ? (
-                          'Cup Semifinal'
-                        ) : nextMatch.matchType === 'cup-3rd' ? (
-                          'Cup 3rd Place Final'
-                        ) : nextMatch.matchType === 'cup-final' ? (
-                          'Cup Final'
-                        ) : 'Cup Tournament'}
-                      </div>
-                      <div className="flex items-center justify-center space-x-4">
-                        <div className="text-center flex-1">
-                          <div className="text-2xl mb-2 flex justify-center">
-                            <FlagImage 
-                              src={COUNTRIES.find(c => c.name === nextMatch.player1.nationality)?.flag || ''}
-                              alt={`${nextMatch.player1.nationality} flag`}
-                              className="w-8 h-5"
-                              nationality={nextMatch.player1.nationality}
-                            />
-                          </div>
-                          <div className="font-semibold text-white text-base">{nextMatch.player1.name}</div>
-                          <div className="text-sm text-cyan-400">Rating: {nextMatch.player1.rating.toFixed(0)}</div>
-                        </div>
-                        <div className="text-2xl font-bold text-cyan-400 px-4">VS</div>
-                        <div className="text-center flex-1">
-                          <div className="text-2xl mb-2 flex justify-center">
-                            <FlagImage 
-                              src={COUNTRIES.find(c => c.name === nextMatch.player2.nationality)?.flag || ''}
-                              alt={`${nextMatch.player2.nationality} flag`}
-                              className="w-8 h-5"
-                              nationality={nextMatch.player2.nationality}
-                            />
-                          </div>
-                          <div className="font-semibold text-white text-base">{nextMatch.player2.name}</div>
-                          <div className="text-sm text-cyan-400">Rating: {nextMatch.player2.rating.toFixed(0)}</div>
-                        </div>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={nextMatch.matchType.includes('cup') ? onSimulateCup : onSimulateMatch}
-                      className="w-full"
-                    >
-                      Simulate {nextMatch.matchType.includes('cup') ? 'Cup Match' : 'Match'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-
-              {allMatchesComplete && (
-                <Button onClick={onEndSeason} className="w-full mb-4" variant="default">
-                  End Season & Start New Season
-                </Button>
-              )}
-
-              {recentMatches.length > 0 && (
-                <Card className="tech-card border-cyan-400/30">
-                  <CardHeader>
-                    <CardTitle className="text-lg text-cyan-400">Recent Results</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      {recentMatches.map((match) => {
-                        const result = formatMatchResult(match);
-                        if (!result) return null;
-                        
-                        const winnerCountry = COUNTRIES.find(c => c.name === result.winner.nationality);
-                        const loserCountry = COUNTRIES.find(c => c.name === result.loser.nationality);
-                        
-                        return (
-                          <div key={match.id} className="flex items-center justify-between p-3 bg-card/50 rounded border border-cyan-400/20">
-                            <div className="flex items-center space-x-3 text-sm flex-1">
-                              <FlagImage 
-                                src={winnerCountry?.flag || ''}
-                                alt={`${result.winner.nationality} flag`}
-                                className="w-5 h-3"
-                                nationality={result.winner.nationality}
-                              />
-                              <span className="text-yellow-400 text-xs">🏆</span>
-                              <span className="font-bold text-white">
-                                {result.winner.name}
-                              </span>
-                              <span className="text-muted-foreground">vs</span>
-                              <FlagImage 
-                                src={loserCountry?.flag || ''}
-                                alt={`${result.loser.nationality} flag`}
-                                className="w-5 h-3"
-                                nationality={result.loser.nationality}
-                              />
-                              <span className="text-muted-foreground">
-                                {result.loser.name}
-                              </span>
-                              {match.matchType !== 'league' && (
-                                <span className="text-xs text-cyan-400 ml-2">
-                                  {match.matchType === 'cup-semi' ? 'SF' : 
-                                   match.matchType === 'cup-final' ? 'F' : 
-                                   match.matchType === 'cup-3rd' ? '3rd' : 'Cup'}
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-sm font-mono text-cyan-400 font-bold">
-                              {result.score}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
     </div>
