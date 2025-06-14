@@ -115,28 +115,37 @@ export const useSquashLeague = () => {
       player.headToHead = {};
     });
     
-    // FIXED: Proper promotion/demotion based on previous season standings
+    // Division assignment logic
     let divisionAssignments: Player[];
     
-    if (seasonArchive.length > 0) {
-      // Get previous season standings for promotion/demotion
+    if (seasonNumber === 1) {
+      // First season - assign by rating (top 5 in Div 1, bottom 5 in Div 2)
+      const sortedPlayers = [...currentPlayers].sort((a, b) => b.rating - a.rating);
+      sortedPlayers.forEach((player, index) => {
+        player.division = index < 5 ? 1 : 2;
+      });
+      divisionAssignments = sortedPlayers;
+      console.log('Season 1 - assigned by rating');
+      console.log('Div 1:', sortedPlayers.slice(0, 5).map(p => p.name));
+      console.log('Div 2:', sortedPlayers.slice(5).map(p => p.name));
+    } else {
+      // Season 2+ - Use promotion/relegation based on previous season final standings
       const lastSeason = seasonArchive[seasonArchive.length - 1];
       const lastDiv1 = lastSeason.division1FinalStandings;
       const lastDiv2 = lastSeason.division2FinalStandings;
       
-      console.log('Previous season final standings:');
-      console.log('Div 1:', lastDiv1.map((p, i) => `${i+1}. ${p.name}`));
-      console.log('Div 2:', lastDiv2.map((p, i) => `${i+6}. ${p.name}`));
+      console.log(`Season ${seasonNumber} promotion/relegation:`);
+      console.log('Previous Div 1 final standings:', lastDiv1.map((p, i) => `${i+1}. ${p.name}`));
+      console.log('Previous Div 2 final standings:', lastDiv2.map((p, i) => `${i+6}. ${p.name}`));
       
-      // Find current active players based on name+nationality (handles retirements)
+      // Create map of current active players
       const activePlayerMap = new Map(currentPlayers.map(p => [p.name + p.nationality, p]));
       
-      // Assign divisions based on previous season with promotion/demotion
       const newDiv1: Player[] = [];
       const newDiv2: Player[] = [];
       
-      // Top 4 from Div 1 stay in Div 1
-      for (let i = 0; i < 4 && i < lastDiv1.length; i++) {
+      // 1. Top 4 from Div 1 stay in Div 1
+      for (let i = 0; i < Math.min(4, lastDiv1.length); i++) {
         const lastSeasonPlayer = lastDiv1[i];
         const currentPlayer = activePlayerMap.get(lastSeasonPlayer.name + lastSeasonPlayer.nationality);
         if (currentPlayer) {
@@ -146,18 +155,18 @@ export const useSquashLeague = () => {
         }
       }
       
-      // Winner of Div 2 gets promoted to Div 1
+      // 2. Winner of Div 2 promoted to Div 1
       if (lastDiv2.length > 0) {
         const promotedPlayerData = lastDiv2[0];
         const promotedPlayer = activePlayerMap.get(promotedPlayerData.name + promotedPlayerData.nationality);
         if (promotedPlayer) {
           promotedPlayer.division = 1;
           newDiv1.push(promotedPlayer);
-          console.log(`${promotedPlayer.name} promoted from Div 2 to Div 1 (won Div 2)`);
+          console.log(`${promotedPlayer.name} PROMOTED from Div 2 to Div 1 (won Div 2)`);
         }
       }
       
-      // Bottom 4 from Div 2 stay in Div 2 (positions 2-5 in Div 2)
+      // 3. Remaining Div 2 players (positions 2-5) stay in Div 2
       for (let i = 1; i < lastDiv2.length; i++) {
         const lastSeasonPlayer = lastDiv2[i];
         const currentPlayer = activePlayerMap.get(lastSeasonPlayer.name + lastSeasonPlayer.nationality);
@@ -168,18 +177,18 @@ export const useSquashLeague = () => {
         }
       }
       
-      // Last place from Div 1 relegated to Div 2
+      // 4. Last place from Div 1 relegated to Div 2
       if (lastDiv1.length >= 5) {
         const relegatedPlayerData = lastDiv1[4]; // 5th place in Div 1
         const relegatedPlayer = activePlayerMap.get(relegatedPlayerData.name + relegatedPlayerData.nationality);
         if (relegatedPlayer) {
           relegatedPlayer.division = 2;
           newDiv2.push(relegatedPlayer);
-          console.log(`${relegatedPlayer.name} relegated from Div 1 to Div 2 (finished 5th)`);
+          console.log(`${relegatedPlayer.name} RELEGATED from Div 1 to Div 2 (finished 5th)`);
         }
       }
       
-      // Fill remaining spots with any new players (should all be Div 2)
+      // 5. Fill remaining spots with new players (should go to Div 2)
       const assignedPlayers = [...newDiv1, ...newDiv2];
       const unassignedPlayers = currentPlayers.filter(p => !assignedPlayers.includes(p));
       
@@ -187,27 +196,19 @@ export const useSquashLeague = () => {
         if (newDiv1.length < 5) {
           player.division = 1;
           newDiv1.push(player);
-          console.log(`${player.name} (new) assigned to Div 1`);
+          console.log(`${player.name} (new/replacement) assigned to Div 1`);
         } else {
           player.division = 2;
           newDiv2.push(player);
-          console.log(`${player.name} (new) assigned to Div 2`);
+          console.log(`${player.name} (new/replacement) assigned to Div 2`);
         }
       }
       
-      console.log('New season division assignments:');
+      console.log(`Season ${seasonNumber} final division assignments:`);
       console.log('Div 1:', newDiv1.map(p => p.name));
       console.log('Div 2:', newDiv2.map(p => p.name));
       
       divisionAssignments = [...newDiv1, ...newDiv2];
-    } else {
-      // First season - assign by rating
-      const sortedPlayers = [...currentPlayers].sort((a, b) => b.rating - a.rating);
-      sortedPlayers.forEach((player, index) => {
-        player.division = index < 5 ? 1 : 2;
-      });
-      divisionAssignments = sortedPlayers;
-      console.log('First season - assigned by rating');
     }
     
     const div1Players = divisionAssignments.filter(p => p.division === 1);
