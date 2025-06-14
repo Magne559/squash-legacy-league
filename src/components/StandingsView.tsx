@@ -28,24 +28,29 @@ export const StandingsView = ({
     return divisionPlayers.sort((a, b) => {
       if (!currentSeason) return 0;
       
-      // PRIMARY: Games won (MOST IMPORTANT)
+      // PRIMARY: Games won (MOST IMPORTANT) - Fixed to prioritize wins correctly
       if (a.gamesWon !== b.gamesWon) return b.gamesWon - a.gamesWon;
       
-      // Tie-breaker 1: Games played (fewer is better if same wins)
-      if (a.gamesPlayed !== b.gamesPlayed) return a.gamesPlayed - b.gamesPlayed;
+      // Tie-breaker 1: Win percentage (games won / games played)
+      const aWinPct = a.gamesPlayed > 0 ? a.gamesWon / a.gamesPlayed : 0;
+      const bWinPct = b.gamesPlayed > 0 ? b.gamesWon / b.gamesPlayed : 0;
+      if (Math.abs(aWinPct - bWinPct) > 0.001) return bWinPct - aWinPct;
       
       // Tie-breaker 2: Set difference
       const aSetDiff = a.setsWon - a.setsLost;
       const bSetDiff = b.setsWon - b.setsLost;
       if (aSetDiff !== bSetDiff) return bSetDiff - aSetDiff;
       
-      // Tie-breaker 3: Total points scored
-      if (a.pointsScored !== b.pointsScored) return b.pointsScored - a.pointsScored;
+      // Tie-breaker 3: Points difference
+      const aPointDiff = a.pointsScored - a.pointsConceded;
+      const bPointDiff = b.pointsScored - b.pointsConceded;
+      if (aPointDiff !== bPointDiff) return bPointDiff - aPointDiff;
       
       // Tie-breaker 4: Head to head
       const headToHead = a.headToHead[b.id];
       if (headToHead) {
-        return headToHead.wins - headToHead.losses;
+        const h2hDiff = headToHead.wins - headToHead.losses;
+        if (h2hDiff !== 0) return h2hDiff;
       }
       
       // Final: Rating
@@ -86,7 +91,7 @@ export const StandingsView = ({
                         <Info className="w-4 h-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Ranked by: 1) Games won 2) Games played 3) Set difference 4) Points scored 5) Head-to-head</p>
+                        <p>Ranked by: 1) Games won 2) Win % 3) Set difference 4) Point difference 5) Head-to-head</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -134,7 +139,7 @@ export const StandingsView = ({
                         <Info className="w-4 h-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Ranked by: 1) Games won 2) Games played 3) Set difference 4) Points scored 5) Head-to-head</p>
+                        <p>Ranked by: 1) Games won 2) Win % 3) Set difference 4) Point difference 5) Head-to-head</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
