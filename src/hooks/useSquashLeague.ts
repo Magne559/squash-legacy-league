@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Player, Season, Match, SeasonArchive } from '@/types/squash';
 import { generateInitialPlayers, generatePlayer } from '@/utils/playerGenerator';
@@ -82,7 +81,7 @@ export const useSquashLeague = () => {
     }
   }, []);
 
-  const startNewSeason = (currentPlayers: Player[], seasonNumber: number) => {
+  const startNewSeason = (currentPlayers: Player[], seasonNumber: number, lastSeasonArchive?: SeasonArchive) => {
     console.log(`Starting season ${seasonNumber}`);
     
     if (currentPlayers.length !== 10) {
@@ -112,23 +111,23 @@ export const useSquashLeague = () => {
       console.log('Season 1 - assigned by rating');
     } else {
       // Subsequent seasons - promotion/relegation
-      const lastArchive = seasonArchive[seasonArchive.length - 1];
-      if (!lastArchive) {
+      const archiveToUse = lastSeasonArchive || seasonArchive[seasonArchive.length - 1];
+      if (!archiveToUse) {
         console.error('No season archive found for promotion/relegation');
         return;
       }
 
-      const lastDiv1 = lastArchive.division1FinalStandings;
-      const lastDiv2 = lastArchive.division2FinalStandings;
+      const lastDiv1 = archiveToUse.division1FinalStandings;
+      const lastDiv2 = archiveToUse.division2FinalStandings;
       
       console.log(`Season ${seasonNumber} promotion/relegation based on:`);
       console.log('Last Div 1:', lastDiv1.map((p, i) => `${i+1}. ${p.name}`));
       console.log('Last Div 2:', lastDiv2.map((p, i) => `${i+1}. ${p.name}`));
       
-      // Create active player lookup
+      // Create active player lookup by name and nationality
       const activePlayerMap = new Map(currentPlayers.map(p => [p.name + p.nationality, p]));
       
-      // Clear all divisions first
+      // Clear all divisions first - everyone starts in Div 2
       currentPlayers.forEach(p => p.division = 2);
       
       // Top 4 from Div 1 stay in Div 1
@@ -137,7 +136,7 @@ export const useSquashLeague = () => {
         const currentPlayer = activePlayerMap.get(lastPlayer.name + lastPlayer.nationality);
         if (currentPlayer) {
           currentPlayer.division = 1;
-          console.log(`${currentPlayer.name} stays in Div 1 (pos ${i+1})`);
+          console.log(`${currentPlayer.name} stays in Div 1 (finished ${i+1})`);
         }
       }
       
@@ -147,21 +146,20 @@ export const useSquashLeague = () => {
         const promotedPlayer = activePlayerMap.get(promotedData.name + promotedData.nationality);
         if (promotedPlayer) {
           promotedPlayer.division = 1;
-          console.log(`${promotedPlayer.name} PROMOTED to Div 1`);
+          console.log(`${promotedPlayer.name} PROMOTED to Div 1 (won Div 2)`);
         }
       }
       
-      // Last place in Div 1 relegated to Div 2
+      // Last place in Div 1 is relegated to Div 2 (already set to 2, but log it)
       if (lastDiv1.length >= 5) {
         const relegatedData = lastDiv1[4];
         const relegatedPlayer = activePlayerMap.get(relegatedData.name + relegatedData.nationality);
         if (relegatedPlayer) {
-          relegatedPlayer.division = 2;
-          console.log(`${relegatedPlayer.name} RELEGATED to Div 2`);
+          console.log(`${relegatedPlayer.name} RELEGATED to Div 2 (finished 5th in Div 1)`);
         }
       }
       
-      // Fill any gaps with highest rated unassigned players
+      // Ensure exactly 5 players in each division
       const div1Count = currentPlayers.filter(p => p.division === 1).length;
       if (div1Count < 5) {
         const unassigned = currentPlayers
@@ -191,9 +189,9 @@ export const useSquashLeague = () => {
     let cupMatches: Match[] = [];
     let cupParticipants: Player[] = [];
     
-    if (seasonNumber > 1 && seasonArchive.length > 0) {
-      const lastArchive = seasonArchive[seasonArchive.length - 1];
-      const lastDiv1 = lastArchive.division1FinalStandings;
+    if (seasonNumber > 1 && (lastSeasonArchive || seasonArchive.length > 0)) {
+      const archiveToUse = lastSeasonArchive || seasonArchive[seasonArchive.length - 1];
+      const lastDiv1 = archiveToUse.division1FinalStandings;
       
       const activePlayerMap = new Map(currentPlayers.map(p => [p.name + p.nationality, p]));
       const availableCupParticipants: Player[] = [];
@@ -382,6 +380,27 @@ export const useSquashLeague = () => {
     console.log('Div 1:', div1Standings.map((p, i) => `${i+1}. ${p.name} (${(p.gamesPlayed > 0 ? (p.gamesWon / p.gamesPlayed * 100).toFixed(1) : '0.0')}%)`));
     console.log('Div 2:', div2Standings.map((p, i) => `${i+1}. ${p.name} (${(p.gamesPlayed > 0 ? (p.gamesWon / p.gamesPlayed * 100).toFixed(1) : '0.0')}%)`));
     
+    // Create season archive FIRST
+    const cupResults = {
+      winner: currentSeason.matches.find(m => m.matchType === 'cup-final' && m.completed)?.winner,
+      runnerUp: (() => {
+        const final = currentSeason.matches.find(m => m.matchType === 'cup-final' && m.completed);
+        return final ? (final.winner?.id === final.player1.id ? final.player2 : final.player1) : undefined;
+      })(),
+      thirdPlace: currentSeason.matches.find(m => m.matchType === 'cup-3rd' && m.completed)?.winner,
+      fourthPlace: (() => {
+        const thirdMatch = currentSeason.matches.find(m => m.matchType === 'cup-3rd' && m.completed);
+        return thirdMatch ? (thirdMatch.winner?.id === thirdMatch.player1.id ? thirdMatch.player2 : thirdMatch.player1) : undefined;
+      })()
+    };
+    
+    const archive: SeasonArchive = {
+      season: currentSeason.number,
+      division1FinalStandings: [...div1Standings],
+      division2FinalStandings: [...div2Standings],
+      cupResults
+    };
+    
     // Update player careers
     const updatedPlayers = players.map(player => {
       player.seasonsPlayed++;
@@ -438,27 +457,6 @@ export const useSquashLeague = () => {
       return player;
     });
     
-    // Create season archive
-    const cupResults = {
-      winner: currentSeason.matches.find(m => m.matchType === 'cup-final' && m.completed)?.winner,
-      runnerUp: (() => {
-        const final = currentSeason.matches.find(m => m.matchType === 'cup-final' && m.completed);
-        return final ? (final.winner?.id === final.player1.id ? final.player2 : final.player1) : undefined;
-      })(),
-      thirdPlace: currentSeason.matches.find(m => m.matchType === 'cup-3rd' && m.completed)?.winner,
-      fourthPlace: (() => {
-        const thirdMatch = currentSeason.matches.find(m => m.matchType === 'cup-3rd' && m.completed);
-        return thirdMatch ? (thirdMatch.winner?.id === thirdMatch.player1.id ? thirdMatch.player2 : thirdMatch.player1) : undefined;
-      })()
-    };
-    
-    const archive: SeasonArchive = {
-      season: currentSeason.number,
-      division1FinalStandings: [...div1Standings],
-      division2FinalStandings: [...div2Standings],
-      cupResults
-    };
-    
     const newSeasonArchive = [...seasonArchive, archive];
     setSeasonArchive(newSeasonArchive);
     
@@ -506,7 +504,8 @@ export const useSquashLeague = () => {
     } else {
       setPlayers(finalPlayers);
       setTimeout(() => {
-        startNewSeason(finalPlayers, currentSeason.number + 1);
+        // Pass the archive directly to startNewSeason
+        startNewSeason(finalPlayers, currentSeason.number + 1, archive);
       }, 1000);
     }
   };
@@ -514,7 +513,9 @@ export const useSquashLeague = () => {
   const handleStartNextSeason = () => {
     setShowRetirementPopup(false);
     setTimeout(() => {
-      startNewSeason(players, nextSeasonNumber);
+      // Use the most recent archive for promotion/relegation
+      const mostRecentArchive = seasonArchive[seasonArchive.length - 1];
+      startNewSeason(players, nextSeasonNumber, mostRecentArchive);
     }, 500);
   };
 
