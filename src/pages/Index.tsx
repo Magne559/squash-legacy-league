@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Player } from "@/types/squash";
 import { useSquashLeague } from "@/hooks/useSquashLeague";
@@ -19,7 +18,6 @@ const Index = () => {
     seasons,
     retiredPlayers,
     simulateNextMatch,
-    simulateCupMatch,
     endSeason,
     resetLeague,
     showRetirementPopup,
@@ -113,7 +111,6 @@ const Index = () => {
           <MatchCenter
             currentSeason={currentSeason}
             onSimulateMatch={simulateNextMatch}
-            onSimulateCup={simulateCupMatch}
             onEndSeason={endSeason}
           />
         </TabsContent>
