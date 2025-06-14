@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Season, Match } from "@/types/squash";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,14 +11,12 @@ import { FlagImage } from "./FlagImage";
 interface MatchCenterProps {
   currentSeason: Season | null;
   onSimulateMatch: () => void;
-  onSimulateCup: () => void;
   onEndSeason: () => void;
 }
 
 export const MatchCenter = ({ 
   currentSeason, 
   onSimulateMatch, 
-  onSimulateCup,
   onEndSeason 
 }: MatchCenterProps) => {
   const [selectedTab, setSelectedTab] = useState("simulate");
@@ -234,10 +231,10 @@ export const MatchCenter = ({
                         </div>
                       </div>
                       <Button 
-                        onClick={nextMatch.matchType.includes('cup') ? onSimulateCup : onSimulateMatch}
+                        onClick={onSimulateMatch}
                         className="w-full"
                       >
-                        Simulate {nextMatch.matchType.includes('cup') ? 'Cup Match' : 'Match'}
+                        Simulate Match
                       </Button>
                     </div>
                   </CardContent>
