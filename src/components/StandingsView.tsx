@@ -24,60 +24,34 @@ export const StandingsView = ({
   const div1Players = players.filter(p => p.division === 1);
   const div2Players = players.filter(p => p.division === 2);
 
-  const getStandings = (divisionPlayers: Player[], division: 1 | 2) => {
+  const getStandings = (divisionPlayers: Player[]) => {
     return divisionPlayers.sort((a, b) => {
-      // PRIMARY: Games won (MOST IMPORTANT)
-      if (a.gamesWon !== b.gamesWon) {
-        console.log(`Sorting ${a.name} (${a.gamesWon}W) vs ${b.name} (${b.gamesWon}W) by wins`);
-        return b.gamesWon - a.gamesWon;
-      }
-      
-      // Tie-breaker 1: Win percentage (games won / games played)
+      // Primary: Win percentage
       const aWinPct = a.gamesPlayed > 0 ? a.gamesWon / a.gamesPlayed : 0;
       const bWinPct = b.gamesPlayed > 0 ? b.gamesWon / b.gamesPlayed : 0;
       if (Math.abs(aWinPct - bWinPct) > 0.001) {
-        console.log(`Sorting ${a.name} (${aWinPct.toFixed(3)}) vs ${b.name} (${bWinPct.toFixed(3)}) by win %`);
         return bWinPct - aWinPct;
       }
       
-      // Tie-breaker 2: Set difference
+      // Secondary: Sets won
+      if (a.setsWon !== b.setsWon) {
+        return b.setsWon - a.setsWon;
+      }
+      
+      // Tertiary: Set difference
       const aSetDiff = a.setsWon - a.setsLost;
       const bSetDiff = b.setsWon - b.setsLost;
       if (aSetDiff !== bSetDiff) {
-        console.log(`Sorting ${a.name} (+${aSetDiff}) vs ${b.name} (+${bSetDiff}) by set diff`);
         return bSetDiff - aSetDiff;
       }
       
-      // Tie-breaker 3: Points difference
-      const aPointDiff = a.pointsScored - a.pointsConceded;
-      const bPointDiff = b.pointsScored - b.pointsConceded;
-      if (aPointDiff !== bPointDiff) {
-        console.log(`Sorting ${a.name} (+${aPointDiff}) vs ${b.name} (+${bPointDiff}) by point diff`);
-        return bPointDiff - aPointDiff;
-      }
-      
-      // Tie-breaker 4: Head to head
-      const headToHead = a.headToHead[b.id];
-      if (headToHead) {
-        const h2hDiff = headToHead.wins - headToHead.losses;
-        if (h2hDiff !== 0) {
-          console.log(`Sorting ${a.name} vs ${b.name} by head-to-head`);
-          return h2hDiff > 0 ? -1 : 1;
-        }
-      }
-      
       // Final: Rating
-      console.log(`Sorting ${a.name} (${a.rating}) vs ${b.name} (${b.rating}) by rating`);
       return b.rating - a.rating;
     });
   };
 
-  const div1Standings = getStandings(div1Players, 1);
-  const div2Standings = getStandings(div2Players, 2);
-
-  console.log('Current standings:');
-  console.log('Div 1:', div1Standings.map((p, i) => `${i+1}. ${p.name} (${p.gamesWon}W-${p.gamesLost}L)`));
-  console.log('Div 2:', div2Standings.map((p, i) => `${i+6}. ${p.name} (${p.gamesWon}W-${p.gamesLost}L)`));
+  const div1Standings = getStandings(div1Players);
+  const div2Standings = getStandings(div2Players);
 
   return (
     <div className="p-4">
@@ -109,7 +83,7 @@ export const StandingsView = ({
                         <Info className="w-4 h-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Ranked by: 1) Games won 2) Win % 3) Set difference 4) Point difference 5) Head-to-head</p>
+                        <p>Ranked by: 1) Win % 2) Sets won 3) Set difference 4) Rating</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
@@ -157,7 +131,7 @@ export const StandingsView = ({
                         <Info className="w-4 h-4 text-muted-foreground" />
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p>Ranked by: 1) Games won 2) Win % 3) Set difference 4) Point difference 5) Head-to-head</p>
+                        <p>Ranked by: 1) Win % 2) Sets won 3) Set difference 4) Rating</p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

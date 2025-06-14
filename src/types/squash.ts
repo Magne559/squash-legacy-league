@@ -1,4 +1,3 @@
-
 export interface Player {
   id: string;
   name: string;
@@ -51,7 +50,7 @@ export interface SeasonRecord {
   season: number;
   division: 1 | 2;
   position: number; // 1-5 for Div 1, 6-10 for Div 2
-  cupResult?: 'Champion' | 'Runner-Up' | '3rd Place' | 'Semifinalist' | 'Did Not Qualify';
+  cupResult?: 'Champion' | 'Runner-Up' | '3rd Place' | 'Did Not Qualify';
   endRating: number;
   leaguePoints: number;
 }
